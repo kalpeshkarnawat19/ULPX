@@ -88,14 +88,16 @@ def test_examples_validate() -> None:
         print(f"PASS {example_path.name} -> {schema_path.name}")
 
 
-def test_no_stage_one_service_code() -> None:
-    """Stage 0 permits placeholders only, preventing undefined contract dependencies."""
-    reserved = [ROOT / "apps", ROOT / "ml", ROOT / "infra", ROOT / "packages" / "parser-runtime", ROOT / "packages" / "exporters", ROOT / "packages" / "detection-contracts"]
+def test_no_premature_service_code() -> None:
+    """Guard: only Stage-1 approved dirs may contain service code."""
+    # Stage 1 permits: apps/ingest-gateway
+    # Everything else must remain placeholder-only.
+    reserved = [ROOT / "apps" / "normalize-worker", ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "ml", ROOT / "infra", ROOT / "packages" / "parser-runtime", ROOT / "packages" / "exporters", ROOT / "packages" / "detection-contracts"]
     nonempty = [path.relative_to(ROOT) for folder in reserved for path in folder.rglob("*") if path.is_file() and path.suffix in CODE_SUFFIXES and path.read_text(encoding="utf-8").strip()]
-    assert not nonempty, f"Stage 0 cannot include service/runtime code: {nonempty}"
+    assert not nonempty, f"Stage 1 cannot include service/runtime code outside approved dirs: {nonempty}"
 
 
 if __name__ == "__main__":
     test_examples_validate()
-    test_no_stage_one_service_code()
-    print("PASS Stage 0 contract gate")
+    test_no_premature_service_code()
+    print("PASS Stage 1 contract gate")

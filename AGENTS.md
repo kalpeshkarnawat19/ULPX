@@ -2,9 +2,10 @@
 
 ## Stage gate
 
-This repository is currently at Stage 0: Repository + Contracts. Do not implement
-service behavior, databases, UI, AI, or a parser runtime until the relevant
-versioned contract exists and its examples validate.
+This repository is currently at Stage 1: Ingest / Raw Preservation. Only
+`apps/ingest-gateway` may contain service code. Do not implement databases, UI,
+AI, parser runtime, or control-plane services until the relevant versioned
+contract exists and its examples validate.
 
 ## Non-negotiable rules
 
