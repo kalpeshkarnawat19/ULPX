@@ -2,7 +2,7 @@
 
 ## Stage gate
 
-This repository is currently at Stage 1: Ingest / Raw Preservation. Only
+This repository is currently at Stage 2: Telemetry Firewall. Only
 `apps/ingest-gateway` may contain service code. Do not implement databases, UI,
 AI, parser runtime, or control-plane services until the relevant versioned
 contract exists and its examples validate.
