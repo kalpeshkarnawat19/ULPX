@@ -157,7 +157,7 @@ ulpf-x/
 
 ```bash
 # Clone the repository
-git clone https://github.com/kalpeshkarnawat19/SIH-PS-2.git
+git clone https://github.com/kalpeshkarnawat19/ULPX.git
 cd SIH-PS-2
 
 # Start all services
