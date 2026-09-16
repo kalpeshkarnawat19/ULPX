@@ -354,11 +354,18 @@ def test_profile_json_batch(profiler):
     fields = profile.fields
     assert "ts" in fields
     assert fields["ts"].inferred_type == DataType.TIMESTAMP.value
+    assert fields["ts"].is_timestamp_candidate is True
     assert not fields["ts"].nullable
+    assert fields["ts"].presence_ratio == 1.0
 
     assert "ip" in fields
     assert fields["ip"].inferred_type == DataType.IPV4.value
+    assert fields["ip"].is_ip_candidate is True
     assert len(fields["ip"].sample_values) == 4
+
+    assert "tag" in fields
+    assert fields["tag"].is_enum_candidate is True
+    assert sorted(fields["tag"].enum_values) == ["prod", "stage"]
 
     assert "status" in fields
     assert fields["status"].inferred_type == DataType.INTEGER.value
@@ -368,6 +375,7 @@ def test_profile_json_batch(profiler):
     assert "duration" in fields
     assert fields["duration"].inferred_type == DataType.FLOAT.value
     assert fields["duration"].nullable is True
+    assert fields["duration"].presence_ratio == 0.75
 
     # Serialization test
     doc = profile.to_dict()

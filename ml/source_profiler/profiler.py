@@ -63,6 +63,11 @@ class FieldProfile:
     min_value: Optional[Any] = None
     max_value: Optional[Any] = None
     avg_length: Optional[float] = None
+    is_ip_candidate: bool = False
+    is_timestamp_candidate: bool = False
+    is_enum_candidate: bool = False
+    enum_values: Optional[List[Any]] = None
+    presence_ratio: float = 1.0
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -975,6 +980,22 @@ class UnknownSourceProfiler:
             lengths = field_lengths.get(name, [])
             avg_len = round(sum(lengths) / len(lengths), 2) if lengths else None
 
+            is_ip = dom_type in (DataType.IPV4.value, DataType.IPV6.value)
+            is_ts = dom_type == DataType.TIMESTAMP.value
+
+            non_null_cnt = valid_records - total_null
+            pres_ratio = round(non_null_cnt / max(1, valid_records), 4)
+
+            is_enum = False
+            enum_vals = None
+            if (
+                non_null_cnt >= 2
+                and distinct_cnt <= min(25, max(2, int(non_null_cnt * 0.5)))
+                and dom_type in (DataType.STRING.value, DataType.INTEGER.value, DataType.BOOLEAN.value)
+            ):
+                is_enum = True
+                enum_vals = sorted(list(field_distinct_values[name]))[:25]
+
             fields_profile[name] = FieldProfile(
                 name=name,
                 inferred_type=dom_type,
@@ -987,6 +1008,11 @@ class UnknownSourceProfiler:
                 min_value=field_min_values.get(name),
                 max_value=field_max_values.get(name),
                 avg_length=avg_len,
+                is_ip_candidate=is_ip,
+                is_timestamp_candidate=is_ts,
+                is_enum_candidate=is_enum,
+                enum_values=enum_vals,
+                presence_ratio=pres_ratio,
             )
 
         # 4. Construct Template Profiles
