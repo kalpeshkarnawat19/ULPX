@@ -79,8 +79,14 @@ func (b *InMemoryBus) Subscribe(topic string) (<-chan RawEventEnvelope, func()) 
 	return ch, unsub
 }
 
-// TopicRawEvents is the canonical topic name for raw event envelopes.
+// TopicRawEvents is the canonical topic name for accepted raw event envelopes.
 const TopicRawEvents = "raw_events"
+
+// TopicQuarantinedEvents is the topic name for quarantined event envelopes.
+const TopicQuarantinedEvents = "quarantined_events"
+
+// TopicRejectedEvents is the topic name for rejected event envelopes.
+const TopicRejectedEvents = "rejected_events"
 
 // MustPublish is a convenience wrapper that panics on error.
 // Only for use in contexts where publish failure is unrecoverable.

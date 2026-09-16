@@ -42,10 +42,14 @@ var validTransports = map[string]bool{
 }
 
 // NewRawEventEnvelope constructs a RawEventEnvelope from raw event bytes.
-// It generates a ULID, computes SHA-256, records byte length, and builds
-// the raw_ref storage path. The ingest_status is always ACCEPTED at this
-// stage (Telemetry Firewall is Stage 2).
+// NewRawEventEnvelope constructs a RawEventEnvelope with default ACCEPTED status.
 func NewRawEventEnvelope(sourceID, transport string, rawBytes []byte, rawRef string) (*RawEventEnvelope, error) {
+	return NewRawEventEnvelopeWithStatus(sourceID, transport, rawBytes, rawRef, StatusAccepted)
+}
+
+// NewRawEventEnvelopeWithStatus constructs a RawEventEnvelope with an explicit IngestStatus
+// determined by the Telemetry Firewall.
+func NewRawEventEnvelopeWithStatus(sourceID, transport string, rawBytes []byte, rawRef string, status IngestStatus) (*RawEventEnvelope, error) {
 	if sourceID == "" {
 		return nil, fmt.Errorf("source_id must not be empty")
 	}
@@ -72,7 +76,7 @@ func NewRawEventEnvelope(sourceID, transport string, rawBytes []byte, rawRef str
 		RawRef:         rawRef,
 		RawSHA256:      hex.EncodeToString(hash[:]),
 		RawLengthBytes: len(rawBytes),
-		IngestStatus:   "ACCEPTED",
+		IngestStatus:   string(status),
 	}, nil
 }
 

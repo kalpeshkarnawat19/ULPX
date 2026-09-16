@@ -62,14 +62,18 @@ func main() {
 			return
 		}
 
-		envelope, err := svc.Ingest(sourceID, transport, rawBytes)
+		envelope, decision, err := svc.IngestWithContext(r.Context(), sourceID, transport, rawBytes)
 		if err != nil {
 			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		if decision.Status == StatusQuarantined {
+			w.WriteHeader(http.StatusAccepted)
+		} else {
+			w.WriteHeader(http.StatusCreated)
+		}
 		json.NewEncoder(w).Encode(envelope)
 	})
 
