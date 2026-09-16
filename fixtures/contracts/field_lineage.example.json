@@ -1,0 +1,6 @@
+{
+  "$schema": "../../packages/contracts/field_lineage.schema.json",
+  "normalized_path": "src.ip", "raw_locator": {"type": "key", "value": "src"}, "extractor": "kv",
+  "transformations": ["trim", "ip"], "mapping_score": 0.99,
+  "mapping_evidence": ["alias_match", "type_match", "event_family_context"], "review_status": "AUTO_ACCEPTED"
+}

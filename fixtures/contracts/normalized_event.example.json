@@ -1,0 +1,10 @@
+{
+  "$schema": "../../packages/contracts/normalized_event.schema.json",
+  "schema_version": "1.0", "event_id": "01J9A0K0P0Z3R3M5WQ6F7H8J9K",
+  "event": {"class": "NETWORK_CONNECTION", "action": "blocked", "outcome": "failure", "time": "2026-09-16T09:30:00Z"},
+  "source": {"vendor": "unknown", "product": "demo_firewall", "device_id": "fw-01"},
+  "src": {"ip": "10.0.0.5", "port": 51022}, "dst": {"ip": "10.0.0.10", "port": 443}, "network": {"protocol": "tcp"},
+  "parser": {"id": "demo.firewall.kv", "version": "1.3.0"},
+  "raw": {"ref": "raw/2026/09/16/src_demo_firewall/01J9A0K0P0Z3R3M5WQ6F7H8J9K", "sha256": "4a0a19218e082a343393b8bd810de8a39c8f7ff733e3ce81d89b3e056c1003fe"},
+  "quality": {"mapping_score": 0.98, "status": "VERIFIED"}, "extensions": {}
+}

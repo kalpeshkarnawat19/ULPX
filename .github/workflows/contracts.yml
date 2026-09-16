@@ -1,0 +1,22 @@
+name: Contract validation
+
+on:
+  pull_request:
+    paths:
+      - 'packages/contracts/**'
+      - 'fixtures/contracts/**'
+      - 'tests/contracts/**'
+      - 'Makefile'
+      - '.github/workflows/contracts.yml'
+  push:
+    branches: [main]
+
+jobs:
+  test-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: make test-contracts

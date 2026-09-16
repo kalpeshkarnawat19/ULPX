@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/telemetry_passport/1.0",
+  "title": "TelemetryPassport",
+  "description": "Machine-readable assurance record for a certified source/parser pair. Scores are linked to a completed validation run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_id", "parser", "validation_run_id", "certification", "scores", "drift"],
+  "properties": {
+    "schema_version": {"const": "1.0"}, "source_id": {"type": "string", "minLength": 1},
+    "parser": {"type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"type": "string", "minLength": 1}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}},
+    "validation_run_id": {"type": "string", "minLength": 1, "description": "Immutable validation evidence reference."},
+    "certification": {"type": "object", "additionalProperties": false, "required": ["status", "timestamp"], "properties": {"status": {"type": "string", "enum": ["CERTIFIED", "NOT_CERTIFIED"]}, "timestamp": {"type": "string", "format": "date-time"}}},
+    "scores": {"type": "object", "additionalProperties": false, "required": ["extraction_accuracy", "semantic_accuracy", "raw_retention", "unknown_field_retention", "detection_preservation"], "properties": {"extraction_accuracy": {"$ref": "#/$defs/score"}, "semantic_accuracy": {"$ref": "#/$defs/score"}, "raw_retention": {"$ref": "#/$defs/score"}, "unknown_field_retention": {"$ref": "#/$defs/score"}, "detection_preservation": {"$ref": "#/$defs/score"}}},
+    "drift": {"type": "object", "additionalProperties": false, "required": ["state"], "properties": {"state": {"type": "string", "enum": ["STABLE", "SUSPECTED", "DRIFTED", "NOT_YET_MEASURED"]}}}
+  },
+  "$defs": {"score": {"type": "number", "minimum": 0, "maximum": 1}}
+}
