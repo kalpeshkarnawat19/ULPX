@@ -1,0 +1,55 @@
+{
+  "$schema": "../../../packages/contracts/parser_spec.schema.json",
+  "dsl_version": "1.0",
+  "parser": {
+    "id": "golden.kv.server",
+    "version": "1.0.0"
+  },
+  "match": {
+    "format": "key_value",
+    "body_contains": ["src=", "dst="]
+  },
+  "body_parser": {
+    "type": "key_value",
+    "pair_separator": " ",
+    "key_value_separator": "="
+  },
+  "fields": {
+    "src": {
+      "type": "ip",
+      "map_to": "src.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "dst": {
+      "type": "ip",
+      "map_to": "dst.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "proto": {
+      "type": "string",
+      "map_to": "network.transport"
+    },
+    "action": {
+      "type": "string",
+      "map_to": "event.action",
+      "enum": {
+        "allow": "allowed",
+        "deny": "blocked"
+      }
+    },
+    "user": {
+      "type": "string",
+      "map_to": "user.name"
+    },
+    "timestamp": {
+      "type": "timestamp",
+      "map_to": "event.timestamp"
+    }
+  },
+  "unknown_fields": {
+    "policy": "preserve"
+  },
+  "raw": {
+    "preserve": true
+  }
+}

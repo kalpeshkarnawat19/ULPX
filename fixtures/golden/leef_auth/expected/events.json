@@ -1,0 +1,13 @@
+{
+  "extracted": {
+    "src.ip": "10.10.10.10",
+    "dst.ip": "10.10.10.20",
+    "user.name": "admin",
+    "event.action": "blocked",
+    "network.transport": "TCP"
+  },
+  "critical_fields": ["src.ip", "user.name", "event.action"],
+  "unknown_fields": {
+    "cat": "Auth"
+  }
+}

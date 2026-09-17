@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../packages/contracts/parser_spec.schema.json",
+  "dsl_version": "1.0",
+  "parser": {
+    "id": "golden.json.cloudtrail",
+    "version": "1.0.0"
+  },
+  "match": {
+    "format": "json"
+  },
+  "body_parser": {
+    "type": "json"
+  },
+  "fields": {
+    "sourceIPAddress": {
+      "type": "ip",
+      "map_to": "src.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "userIdentity.userName": {
+      "type": "string",
+      "map_to": "user.name"
+    },
+    "eventName": {
+      "type": "string",
+      "map_to": "event.action"
+    },
+    "eventTime": {
+      "type": "timestamp",
+      "map_to": "event.timestamp"
+    }
+  },
+  "unknown_fields": {
+    "policy": "preserve"
+  },
+  "raw": {
+    "preserve": true
+  }
+}

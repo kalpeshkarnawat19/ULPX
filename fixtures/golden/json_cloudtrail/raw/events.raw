@@ -1,0 +1,1 @@
+{"eventVersion":"1.08","userIdentity":{"userName":"alice","type":"IAMUser"},"eventTime":"2026-09-16T12:00:00Z","eventName":"ConsoleLogin","sourceIPAddress":"203.0.113.19","responseElements":{"ConsoleLogin":"Success"}}

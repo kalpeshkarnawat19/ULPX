@@ -1,0 +1,13 @@
+{
+  "extracted": {
+    "src.ip": "10.0.0.50",
+    "dst.ip": "192.168.1.100",
+    "http.response.status_code": 200,
+    "http.request.method": "GET",
+    "event.timestamp": "2026-09-16T14:00:00Z"
+  },
+  "critical_fields": ["src.ip", "dst.ip", "http.response.status_code"],
+  "unknown_fields": {
+    "uri": "/api/v1/status"
+  }
+}

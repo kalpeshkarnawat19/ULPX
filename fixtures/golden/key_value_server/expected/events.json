@@ -1,0 +1,14 @@
+{
+  "extracted": {
+    "src.ip": "172.16.1.5",
+    "dst.ip": "8.8.8.8",
+    "network.transport": "UDP",
+    "event.action": "allowed",
+    "user.name": "admin",
+    "event.timestamp": "2026-09-16T14:30:00Z"
+  },
+  "critical_fields": ["src.ip", "dst.ip", "event.action"],
+  "unknown_fields": {
+    "session_id": "98765"
+  }
+}

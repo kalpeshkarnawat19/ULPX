@@ -1,0 +1,8 @@
+{
+  "source_id": "csv_access",
+  "format": "csv",
+  "description": "RFC 4180 CSV structured web proxy access telemetry",
+  "critical_fields": ["src.ip", "dst.ip", "http.response.status_code"],
+  "min_extraction_accuracy": 0.98,
+  "requires_raw_retention": true
+}
