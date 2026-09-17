@@ -89,15 +89,15 @@ def test_examples_validate() -> None:
 
 
 def test_no_premature_service_code() -> None:
-    """Guard: only Stage-2 approved dirs may contain service code."""
-    # Stage 2 permits: apps/ingest-gateway
+    """Guard: only Stage-4 approved dirs may contain service code."""
+    # Stage 4 permits: apps/ingest-gateway, packages/parser-runtime, apps/normalize-worker
     # Everything else must remain placeholder-only.
-    reserved = [ROOT / "apps" / "normalize-worker", ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "ml", ROOT / "infra", ROOT / "packages" / "parser-runtime", ROOT / "packages" / "exporters", ROOT / "packages" / "detection-contracts"]
+    reserved = [ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "ml", ROOT / "infra", ROOT / "packages" / "exporters", ROOT / "packages" / "detection-contracts"]
     nonempty = [path.relative_to(ROOT) for folder in reserved for path in folder.rglob("*") if path.is_file() and path.suffix in CODE_SUFFIXES and path.read_text(encoding="utf-8").strip()]
-    assert not nonempty, f"Stage 2 cannot include service/runtime code outside approved dirs: {nonempty}"
+    assert not nonempty, f"Stage 4 cannot include service/runtime code outside approved dirs: {nonempty}"
 
 
 if __name__ == "__main__":
     test_examples_validate()
     test_no_premature_service_code()
-    print("PASS Stage 2 contract gate")
+    print("PASS Stage 4 contract gate")

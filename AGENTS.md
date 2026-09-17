@@ -2,10 +2,11 @@
 
 ## Stage gate
 
-This repository is currently at Stage 2: Telemetry Firewall. Only
-`apps/ingest-gateway` may contain service code. Do not implement databases, UI,
-AI, parser runtime, or control-plane services until the relevant versioned
-contract exists and its examples validate.
+This repository is currently at Stage 4: ULPF Canonical IR. Only
+`apps/ingest-gateway`, `packages/parser-runtime`, and `apps/normalize-worker`
+may contain service code. Do not implement databases, UI, AI, or
+control-plane services until the relevant versioned contract exists and
+its examples validate.
 
 ## Non-negotiable rules
 
