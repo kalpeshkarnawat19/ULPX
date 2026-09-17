@@ -2,7 +2,7 @@
 
 ## Stage gate
 
-This repository is currently at Stage 4: ULPF Canonical IR. Only
+This repository is currently at Stage 5: Forensic Field Lineage. Only
 `apps/ingest-gateway`, `packages/parser-runtime`, and `apps/normalize-worker`
 may contain service code. Do not implement databases, UI, AI, or
 control-plane services until the relevant versioned contract exists and
