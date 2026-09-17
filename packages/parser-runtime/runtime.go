@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-// FieldLineage tracks how a canonical field was derived from raw telemetry.
-type FieldLineage struct {
-	SourceField string  `json:"source_field"`
-	Rule        string  `json:"rule"`
-	Confidence  float64 `json:"confidence"`
-}
-
 // ParseResult encapsulates the output of executing a ParserSpec against raw telemetry.
 type ParseResult struct {
 	Extracted     map[string]interface{}  `json:"extracted"`
@@ -255,10 +248,21 @@ func (r *ParserRuntime) Parse(raw []byte, spec *ParserSpec) (*ParseResult, error
 		}
 
 		res.Extracted[fieldSpec.MapTo] = typedVal
-		res.Lineage[fieldSpec.MapTo] = FieldLineage{
-			SourceField: srcField,
-			Rule:        fieldSpec.Type,
-			Confidence:  1.0,
+		if lin, err := BuildFieldLineage(fieldSpec.MapTo, srcField, spec.BodyParser.Type, fieldSpec.Transformations, rawStr, typedVal); err == nil {
+			res.Lineage[fieldSpec.MapTo] = *lin
+		} else {
+			res.Lineage[fieldSpec.MapTo] = FieldLineage{
+				NormalizedPath: fieldSpec.MapTo,
+				RawLocator: RawLocator{
+					Type:  "key",
+					Value: srcField,
+				},
+				Extractor:       NormalizeExtractor(spec.BodyParser.Type),
+				Transformations: fieldSpec.Transformations,
+				MappingScore:    1.0,
+				MappingEvidence: []string{"type_match"},
+				ReviewStatus:    "AUTO_ACCEPTED",
+			}
 		}
 	}
 
