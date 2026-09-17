@@ -237,6 +237,22 @@ func (n *Normalizer) Normalize(env RawEnvelopeInput, parseResult *parser_runtime
 	return normEvent, nil
 }
 
-func main() {
-	fmt.Println("ULPF-X normalize-worker: Stage 4 Canonical IR normalizer runtime ready")
+// ExtractLineage returns validated FieldLineage records for all canonical fields mapped into the event.
+func (n *Normalizer) ExtractLineage(parseResult *parser_runtime.ParseResult) ([]parser_runtime.FieldLineage, error) {
+	if parseResult == nil {
+		return nil, fmt.Errorf("parseResult cannot be nil")
+	}
+	var records []parser_runtime.FieldLineage
+	for _, lin := range parseResult.Lineage {
+		if err := lin.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid lineage record for %s: %w", lin.NormalizedPath, err)
+		}
+		records = append(records, lin)
+	}
+	return records, nil
 }
+
+func main() {
+	fmt.Println("ULPF-X normalize-worker: Stage 5 Forensic Field Lineage normalizer runtime ready")
+}
+
