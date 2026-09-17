@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test
+.PHONY: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test
 
 test-contracts:
 	$(PYTHON) tests/contracts/test_schemas.py
@@ -21,5 +21,8 @@ test-lineage:
 	cd packages/parser-runtime && go test -v -count=1 -run "TestLineage" ./...
 	cd apps/normalize-worker && go test -v -count=1 -run "TestLineage" ./...
 
-test: test-contracts test-ingest test-firewall test-parser test-ir test-lineage
+test-exporters:
+	cd packages/exporters && go test -v -count=1 ./...
+
+test: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters
 
