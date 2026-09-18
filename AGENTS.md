@@ -2,10 +2,10 @@
 
 ## Stage gate
 
-This repository is currently at Stage 17: Shadow Parsing. Stages 1-16 are
+This repository is currently at Stage 18: Safe Self-Healing. Stages 1-17 are
 complete. The assurance record may use completed validation evidence, but it
 must never manufacture numeric metrics, certification, or drift observations.
-Do not implement Stage 18+ safe self-healing, database, UI, or API work
+Do not implement Stage 19+ performance benchmarking, database, UI, or API work
 until its versioned contract exists and its examples validate.
 
 ## Non-negotiable rules
