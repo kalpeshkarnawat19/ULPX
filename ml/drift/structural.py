@@ -34,6 +34,28 @@ class DriftThresholds:
     type_violation_rate: float = 0.005     # 0.5% critical type mutations
     key_set_distance: float = 0.15         # 0.15 key-set Jaccard distance
     distribution_divergence: float = 0.20  # 0.20 Total Variation Distance
+    dps_regression: Optional[float] = None
+    enum_drift_score: Optional[float] = None
+    critical_mapping_drift: Optional[float] = None
+    event_family_drift: Optional[float] = None
+
+    def to_dict(self) -> Dict[str, float]:
+        res = {
+            "parse_failure_rate": self.parse_failure_rate,
+            "unknown_field_ratio": self.unknown_field_ratio,
+            "type_violation_rate": self.type_violation_rate,
+            "key_set_distance": self.key_set_distance,
+            "distribution_divergence": self.distribution_divergence,
+        }
+        if self.dps_regression is not None:
+            res["dps_regression"] = self.dps_regression
+        if self.enum_drift_score is not None:
+            res["enum_drift_score"] = self.enum_drift_score
+        if self.critical_mapping_drift is not None:
+            res["critical_mapping_drift"] = self.critical_mapping_drift
+        if self.event_family_drift is not None:
+            res["event_family_drift"] = self.event_family_drift
+        return res
 
 
 @dataclass(frozen=True)
@@ -44,15 +66,28 @@ class DriftSignals:
     type_violation_rate: float
     key_set_distance: float
     distribution_divergence: float
+    dps_regression: Optional[float] = None
+    enum_drift_score: Optional[float] = None
+    critical_mapping_drift: Optional[float] = None
+    event_family_drift: Optional[float] = None
 
     def to_dict(self) -> Dict[str, float]:
-        return {
+        res = {
             "parse_failure_rate": round(self.parse_failure_rate, 4),
             "unknown_field_ratio": round(self.unknown_field_ratio, 4),
             "type_violation_rate": round(self.type_violation_rate, 4),
             "key_set_distance": round(self.key_set_distance, 4),
             "distribution_divergence": round(self.distribution_divergence, 4),
         }
+        if self.dps_regression is not None:
+            res["dps_regression"] = round(self.dps_regression, 4)
+        if self.enum_drift_score is not None:
+            res["enum_drift_score"] = round(self.enum_drift_score, 4)
+        if self.critical_mapping_drift is not None:
+            res["critical_mapping_drift"] = round(self.critical_mapping_drift, 4)
+        if self.event_family_drift is not None:
+            res["event_family_drift"] = round(self.event_family_drift, 4)
+        return res
 
 
 @dataclass(frozen=True)
@@ -95,7 +130,7 @@ class DriftReport:
                 "sample_count": self.sample_count,
             },
             "signals": self.signals.to_dict(),
-            "thresholds": {
+            "thresholds": self.thresholds.to_dict() if hasattr(self.thresholds, "to_dict") else {
                 "parse_failure_rate": self.thresholds.parse_failure_rate,
                 "unknown_field_ratio": self.thresholds.unknown_field_ratio,
                 "type_violation_rate": self.thresholds.type_violation_rate,
