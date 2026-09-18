@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/shadow_comparison/1.0",
+  "title": "ShadowComparisonReport",
+  "description": "Machine-readable active-vs-candidate shadow parsing evaluation report.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_id",
+    "active_parser",
+    "candidate_parser",
+    "shadow_state",
+    "evaluated_at",
+    "evaluation_window",
+    "metrics",
+    "field_divergences",
+    "downstream_isolation_verified",
+    "recommendation",
+    "recommendation_reasons"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "source_id": {"type": "string", "minLength": 1},
+    "active_parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    },
+    "candidate_parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    },
+    "shadow_state": {
+      "type": "string",
+      "enum": ["PASSED", "FAILED", "SUSPECTED"]
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evaluation_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_time", "end_time", "sample_count"],
+      "properties": {
+        "start_time": {"type": "string", "format": "date-time"},
+        "end_time": {"type": "string", "format": "date-time"},
+        "sample_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field_match_rate",
+        "critical_semantic_divergence",
+        "unknown_field_retention",
+        "active_dps",
+        "candidate_dps",
+        "dps_delta",
+        "active_latency_p95_ms",
+        "candidate_latency_p95_ms",
+        "latency_delta_pct"
+      ],
+      "properties": {
+        "field_match_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "critical_semantic_divergence": {"type": "number", "minimum": 0, "maximum": 1},
+        "unknown_field_retention": {"type": "number", "minimum": 0, "maximum": 1},
+        "active_dps": {"type": "number", "minimum": 0, "maximum": 1},
+        "candidate_dps": {"type": "number", "minimum": 0, "maximum": 1},
+        "dps_delta": {"type": "number", "minimum": -1, "maximum": 1},
+        "active_latency_p95_ms": {"type": "number", "minimum": 0},
+        "candidate_latency_p95_ms": {"type": "number", "minimum": 0},
+        "latency_delta_pct": {"type": "number"}
+      }
+    },
+    "field_divergences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "match_rate", "divergence_type"],
+        "properties": {
+          "field": {"type": "string", "minLength": 1},
+          "match_rate": {"type": "number", "minimum": 0, "maximum": 1},
+          "divergence_type": {
+            "type": "string",
+            "enum": ["VALUE_MISMATCH", "FIELD_MISSING_IN_CANDIDATE", "NEW_FIELD_IN_CANDIDATE", "TYPE_MISMATCH"]
+          },
+          "example_mismatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "active": {},
+              "candidate": {}
+            }
+          }
+        }
+      }
+    },
+    "downstream_isolation_verified": {
+      "type": "boolean"
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["READY_FOR_PROMOTION", "REJECT", "REQUIRE_HUMAN_REVIEW"]
+    },
+    "recommendation_reasons": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
