@@ -469,3 +469,22 @@ def test_profile_line_single(profiler):
     assert profile.total_records == 1
     assert profile.valid_records == 1
     assert profile.fields["load"].inferred_type == DataType.FLOAT.value
+
+
+def test_profile_mixed_format_fallback(profiler):
+    # Dominant JSON batch with a CEF log line interleaved
+    logs = [
+        '{"event": "login", "user": "alice"}',
+        '{"event": "logout", "user": "alice"}',
+        '{"event": "login", "user": "bob"}',
+        'CEF:0|SecurityCorp|ThreatShield|2.4.1|1001|Malware Blocked|7|src=10.0.0.15 dst=172.16.0.4',
+    ]
+    profile = profiler.profile(logs)
+    assert profile.total_records == 4
+    # All 4 should be validly parsed because of multi-format fallback!
+    assert profile.valid_records == 4
+    assert profile.corrupted_records == 0
+    assert "format_distribution" in profile.metadata
+    assert profile.metadata["format_distribution"][LogFormat.JSON.value] == 3
+    assert profile.metadata["format_distribution"][LogFormat.CEF.value] == 1
+

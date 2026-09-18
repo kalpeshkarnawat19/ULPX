@@ -755,7 +755,7 @@ class UnknownSourceProfiler:
                 if CEFParser.is_cef(l) or LEEFParser.is_leef(l) or Syslog5424Parser.is_syslog_5424(l) or JSONParser.is_json(l)
             )
             if non_csv_structured / len(clean_lines) < 0.2:
-                return LogFormat.CSV, 0.95, csv_delim, {"delimiter": csv_delim}
+                return LogFormat.CSV, 0.95, csv_delim, {"delimiter": csv_delim, "format_distribution": {LogFormat.CSV.value: len(clean_lines)}}
 
         # Profile line-by-line formats
         format_votes: Counter[LogFormat] = Counter()
@@ -904,16 +904,24 @@ class UnknownSourceProfiler:
         template_samples: Dict[str, str] = {}
         template_var_counts: Dict[str, int] = {}
 
+        format_distribution: Counter[str] = Counter()
+
         for line in lines[start_idx:]:
             parsed, record_fmt = self.parse_record(
                 line, format_hint=dominant_fmt, delimiter=delimiter, headers=headers
             )
 
             if parsed is None or not parsed:
-                corrupted_records += 1
-                continue
+                # Attempt fallback across other parsers if dominant_fmt failed on this line
+                fallback_parsed, fallback_fmt = self.parse_record(line, format_hint=None)
+                if fallback_parsed is not None and fallback_fmt != LogFormat.TEXT:
+                    parsed, record_fmt = fallback_parsed, fallback_fmt
+                else:
+                    corrupted_records += 1
+                    continue
 
             valid_records += 1
+            format_distribution[record_fmt.value] += 1
             if len(parsed_records) < 10:
                 parsed_records.append(parsed)
 
@@ -1029,6 +1037,14 @@ class UnknownSourceProfiler:
                     frequency_ratio=round(count / max(1, valid_records), 4),
                 )
             )
+
+        if meta is None:
+            meta = {}
+        if "format_distribution" not in meta or not meta["format_distribution"]:
+            meta["format_distribution"] = dict(format_distribution)
+        else:
+            for fmt_name, count in format_distribution.items():
+                meta["format_distribution"][fmt_name] = count
 
         return SourceProfile(
             format=dominant_fmt,
