@@ -1,0 +1,44 @@
+{
+  "$schema": "../../packages/contracts/drift_report.schema.json",
+  "schema_version": "1.0",
+  "source_id": "demo-firewall",
+  "parser": {
+    "id": "demo.firewall.kv",
+    "version": "1.4.0"
+  },
+  "drift_state": "DRIFTED",
+  "observed_at": "2026-09-18T13:00:00Z",
+  "window": {
+    "start_time": "2026-09-18T12:00:00Z",
+    "end_time": "2026-09-18T13:00:00Z",
+    "baseline_run_id": "baseline-2026-09-18-001",
+    "sample_count": 500
+  },
+  "signals": {
+    "parse_failure_rate": 0.0,
+    "unknown_field_ratio": 0.0,
+    "type_violation_rate": 0.0,
+    "key_set_distance": 0.0,
+    "distribution_divergence": 0.02,
+    "dps_regression": 0.20,
+    "enum_drift_score": 0.15,
+    "critical_mapping_drift": 0.0,
+    "event_family_drift": 0.0
+  },
+  "thresholds": {
+    "parse_failure_rate": 0.02,
+    "unknown_field_ratio": 0.05,
+    "type_violation_rate": 0.005,
+    "key_set_distance": 0.15,
+    "distribution_divergence": 0.20,
+    "dps_regression": 0.0,
+    "enum_drift_score": 0.05,
+    "critical_mapping_drift": 0.0,
+    "event_family_drift": 0.10
+  },
+  "drift_details": [
+    "Mandatory DPS regression 20.00% exceeds threshold 0.00%: rule DET-002 failed",
+    "Enum behavior drift 15.00% exceeds threshold 5.00%: action values inverted"
+  ],
+  "remediation_recommended": true
+}

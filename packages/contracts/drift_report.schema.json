@@ -63,7 +63,11 @@
         "unknown_field_ratio": {"type": "number", "minimum": 0, "maximum": 1},
         "type_violation_rate": {"type": "number", "minimum": 0, "maximum": 1},
         "key_set_distance": {"type": "number", "minimum": 0, "maximum": 1},
-        "distribution_divergence": {"type": "number", "minimum": 0, "maximum": 1}
+        "distribution_divergence": {"type": "number", "minimum": 0, "maximum": 1},
+        "dps_regression": {"type": "number", "minimum": 0, "maximum": 1},
+        "enum_drift_score": {"type": "number", "minimum": 0, "maximum": 1},
+        "critical_mapping_drift": {"type": "number", "minimum": 0, "maximum": 1},
+        "event_family_drift": {"type": "number", "minimum": 0, "maximum": 1}
       }
     },
     "thresholds": {
@@ -81,7 +85,11 @@
         "unknown_field_ratio": {"type": "number", "minimum": 0, "maximum": 1},
         "type_violation_rate": {"type": "number", "minimum": 0, "maximum": 1},
         "key_set_distance": {"type": "number", "minimum": 0, "maximum": 1},
-        "distribution_divergence": {"type": "number", "minimum": 0, "maximum": 1}
+        "distribution_divergence": {"type": "number", "minimum": 0, "maximum": 1},
+        "dps_regression": {"type": "number", "minimum": 0, "maximum": 1},
+        "enum_drift_score": {"type": "number", "minimum": 0, "maximum": 1},
+        "critical_mapping_drift": {"type": "number", "minimum": 0, "maximum": 1},
+        "event_family_drift": {"type": "number", "minimum": 0, "maximum": 1}
       }
     },
     "drift_details": {
