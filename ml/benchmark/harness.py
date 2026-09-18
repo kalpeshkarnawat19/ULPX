@@ -70,23 +70,47 @@ class BenchmarkHarness:
         # 3. Timed execution run
         t0 = time.perf_counter()
 
-        for idx, event in enumerate(workload_events):
-            t_event_start = time.perf_counter()
-            try:
-                # Use shadow runner parser engine (lossless, deterministic)
-                res = self.shadow_runner._parse(event, parser_spec)
-                if not isinstance(res, dict) or not res:
+        if concurrency > 1:
+            from concurrent.futures import ThreadPoolExecutor
+
+            def _worker_parse(ev: Any) -> tuple[float, bool]:
+                ts = time.perf_counter()
+                is_err = False
+                try:
+                    res = self.shadow_runner._parse(ev, parser_spec)
+                    if not isinstance(res, dict) or not res:
+                        is_err = True
+                except Exception:
+                    is_err = True
+                te = time.perf_counter()
+                return ((te - ts) * 1000.0, is_err)
+
+            with ThreadPoolExecutor(max_workers=concurrency) as executor:
+                exec_results = list(executor.map(_worker_parse, workload_events))
+
+            for lat_ms, is_err in exec_results:
+                tracker.record(lat_ms)
+                total_processed += 1
+                if is_err:
                     total_errors += 1
-            except Exception:
-                total_errors += 1
+        else:
+            for idx, event in enumerate(workload_events):
+                t_event_start = time.perf_counter()
+                try:
+                    # Use shadow runner parser engine (lossless, deterministic)
+                    res = self.shadow_runner._parse(event, parser_spec)
+                    if not isinstance(res, dict) or not res:
+                        total_errors += 1
+                except Exception:
+                    total_errors += 1
 
-            t_event_end = time.perf_counter()
-            lat_ms = (t_event_end - t_event_start) * 1000.0
-            tracker.record(lat_ms)
-            total_processed += 1
+                t_event_end = time.perf_counter()
+                lat_ms = (t_event_end - t_event_start) * 1000.0
+                tracker.record(lat_ms)
+                total_processed += 1
 
-            if (idx + 1) % 100 == 0:
-                monitor.update_memory()
+                if (idx + 1) % 100 == 0:
+                    monitor.update_memory()
 
         t1 = time.perf_counter()
         duration = max(0.0001, t1 - t0)
@@ -176,19 +200,41 @@ class BenchmarkHarness:
 
         t0 = time.perf_counter()
 
-        for idx, item in enumerate(workload_events):
-            t_item_start = time.perf_counter()
-            try:
-                target_callable(item)
-            except Exception:
-                total_errors += 1
+        if concurrency > 1:
+            from concurrent.futures import ThreadPoolExecutor
 
-            t_item_end = time.perf_counter()
-            tracker.record((t_item_end - t_item_start) * 1000.0)
-            total_processed += 1
+            def _worker_call(it: Any) -> tuple[float, bool]:
+                ts = time.perf_counter()
+                is_err = False
+                try:
+                    target_callable(it)
+                except Exception:
+                    is_err = True
+                te = time.perf_counter()
+                return ((te - ts) * 1000.0, is_err)
 
-            if (idx + 1) % 100 == 0:
-                monitor.update_memory()
+            with ThreadPoolExecutor(max_workers=concurrency) as executor:
+                exec_results = list(executor.map(_worker_call, workload_events))
+
+            for lat_ms, is_err in exec_results:
+                tracker.record(lat_ms)
+                total_processed += 1
+                if is_err:
+                    total_errors += 1
+        else:
+            for idx, item in enumerate(workload_events):
+                t_item_start = time.perf_counter()
+                try:
+                    target_callable(item)
+                except Exception:
+                    total_errors += 1
+
+                t_item_end = time.perf_counter()
+                tracker.record((t_item_end - t_item_start) * 1000.0)
+                total_processed += 1
+
+                if (idx + 1) % 100 == 0:
+                    monitor.update_memory()
 
         t1 = time.perf_counter()
         duration = max(0.0001, t1 - t0)

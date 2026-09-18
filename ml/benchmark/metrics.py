@@ -120,6 +120,7 @@ class ResourceMonitor:
     def start(self) -> None:
         """Starts monitoring run."""
         self._start_time = time.perf_counter()
+        self._start_cpu_time = time.process_time()
         if self._psutil_proc:
             try:
                 # Prime psutil cpu measurement
@@ -132,8 +133,9 @@ class ResourceMonitor:
 
     def update_queue_depth(self, current_depth: int) -> None:
         """Updates observed queue depth during streaming."""
-        if current_depth > self._max_queue_depth:
-            self._max_queue_depth = current_depth
+        depth = max(0, int(current_depth))
+        if depth > self._max_queue_depth:
+            self._max_queue_depth = depth
 
     def update_memory(self) -> None:
         """Polls current memory to track peak usage."""
@@ -144,17 +146,26 @@ class ResourceMonitor:
     def stop(self) -> Dict[str, Any]:
         """Stops monitoring and returns resource utilization metrics."""
         self.update_memory()
-        cpu_pct = 0.0
+        cpu_pct: Optional[float] = None
         if self._psutil_proc:
             try:
-                cpu_pct = float(self._psutil_proc.cpu_percent(interval=None))
+                val = float(self._psutil_proc.cpu_percent(interval=None))
+                if val > 0.0:
+                    cpu_pct = val
             except Exception:
-                cpu_pct = 25.0
-        else:
-            cpu_pct = 25.0
+                pass
+
+        if cpu_pct is None:
+            # Empirical fallback using process CPU time over elapsed wall time
+            elapsed_wall = time.perf_counter() - self._start_time
+            elapsed_cpu = time.process_time() - self._start_cpu_time
+            if elapsed_wall > 0:
+                cpu_pct = (elapsed_cpu / elapsed_wall) * 100.0
+            else:
+                cpu_pct = 0.0
 
         return {
-            "cpu_percent": round(max(0.0, cpu_pct), 2),
+            "cpu_percent": round(max(0.0, float(cpu_pct)), 2),
             "memory_peak_mb": round(self._memory_peak_mb, 2),
             "queue_depth_max": int(self._max_queue_depth),
         }

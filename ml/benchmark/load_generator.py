@@ -92,19 +92,24 @@ class LoadGenerator:
         pacing_eps: Optional[float] = None,
     ) -> Iterator[str]:
         """
-        Streams `count` events. If `pacing_eps` is specified, throttles rate to target EPS.
+        Streams `count` events. If `pacing_eps` is specified, throttles rate to target EPS
+        with zero-drift target-time compensation.
         If `pacing_eps` is None, yields unconstrained for maximum saturation testing.
         """
-        interval = (1.0 / pacing_eps) if (pacing_eps and pacing_eps > 0) else 0.0
+        if not pacing_eps or pacing_eps <= 0:
+            for idx in range(count):
+                yield self.generate_single(idx)
+            return
+
+        interval = 1.0 / pacing_eps
+        start_time = time.perf_counter()
 
         for idx in range(count):
-            start = time.perf_counter()
             yield self.generate_single(idx)
-            if interval > 0:
-                elapsed = time.perf_counter() - start
-                remaining = interval - elapsed
-                if remaining > 0:
-                    time.sleep(remaining)
+            target_time = start_time + ((idx + 1) * interval)
+            remaining = target_time - time.perf_counter()
+            if remaining > 0:
+                time.sleep(remaining)
 
     def stream_batches(
         self,
@@ -113,21 +118,29 @@ class LoadGenerator:
         pacing_eps: Optional[float] = None,
     ) -> Iterator[List[str]]:
         """
-        Streams batches of events. If `pacing_eps` is specified, throttles batches
-        to match aggregate target EPS.
+        Streams batches of events with drift-compensated batch interval scheduling.
         """
+        if not pacing_eps or pacing_eps <= 0:
+            remaining = total_events
+            while remaining > 0:
+                current_batch_size = min(batch_size, remaining)
+                yield [self.generate_single() for _ in range(current_batch_size)]
+                remaining -= current_batch_size
+            return
+
+        batch_interval = batch_size / pacing_eps
+        start_time = time.perf_counter()
+        batch_idx = 0
         remaining = total_events
-        batch_interval = (batch_size / pacing_eps) if (pacing_eps and pacing_eps > 0) else 0.0
 
         while remaining > 0:
             current_batch_size = min(batch_size, remaining)
-            start = time.perf_counter()
             batch = [self.generate_single() for _ in range(current_batch_size)]
             yield batch
             remaining -= current_batch_size
+            batch_idx += 1
 
-            if batch_interval > 0:
-                elapsed = time.perf_counter() - start
-                sleep_time = batch_interval - elapsed
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
+            target_time = start_time + (batch_idx * batch_interval)
+            sleep_time = target_time - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)

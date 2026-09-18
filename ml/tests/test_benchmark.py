@@ -200,3 +200,26 @@ def test_benchmark_report_contract_compliance() -> None:
 
     # Validate against JSON Schema engine
     validate(report, schema, schema)
+
+
+def test_benchmark_concurrent_execution() -> None:
+    """Verify BenchmarkHarness supports multi-threaded concurrency pool without data races."""
+    harness = BenchmarkHarness()
+    report = harness.run_parser_benchmark(
+        parser_spec=SAMPLE_KV_PARSER_SPEC,
+        event_count=500,
+        format_type="kv",
+        concurrency=4,
+    )
+
+    assert report["workload"]["concurrency"] == 4
+    assert report["results"]["total_events_processed"] == 500
+    assert report["results"]["total_errors"] == 0
+    assert report["results"]["measured_eps"] > 0
+    assert report["results"]["latency_ms"]["p50"] >= 0.0
+
+    root = Path(__file__).resolve().parents[2]
+    schema_file = root / "packages" / "contracts" / "benchmark_report.schema.json"
+    schema = json.loads(schema_file.read_text(encoding="utf-8"))
+    validate(report, schema, schema)
+
