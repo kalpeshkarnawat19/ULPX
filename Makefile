@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test-passport test-detection-contracts test-dps test-profiler test-mapper test-ai-assist test-compiler test-onboarding test-validation test-ml test
+.PHONY: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test-passport test-detection-contracts test-dps test-profiler test-mapper test-ai-assist test-compiler test-onboarding test-validation test-drift test-ml test
 
 test-contracts:
 	$(PYTHON) tests/contracts/test_schemas.py
@@ -52,8 +52,11 @@ test-onboarding:
 test-validation:
 	$(PYTHON) -m pytest ml/tests/test_validation.py -v
 
+test-drift:
+	$(PYTHON) -m pytest ml/tests/test_drift.py -v
+
 test-ml:
 	$(PYTHON) -m pytest ml/tests/ -v
 
-test: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test-detection-contracts test-dps test-passport test-ml
+test: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test-detection-contracts test-dps test-passport test-drift test-ml
 
