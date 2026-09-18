@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, Any, List, Optional
 
 class TargetRuntime(Enum):
+    ULPF_PARSER_SPEC = "ulpf_parser_spec"
     VECTOR_REMAP = "vector_remap"
     LOGSTASH = "logstash"
     PYTHON_NATIVE = "python_native"
