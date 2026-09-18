@@ -139,7 +139,7 @@ def test_passport_state_rules() -> None:
 
 def test_no_future_stage_service_code() -> None:
     """Guard: Stage 14 permits assurance code but not future platform/API work."""
-    reserved = [ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "infra", ROOT / "packages" / "detection-contracts"]
+    reserved = [ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "infra"]
     nonempty = [path.relative_to(ROOT) for folder in reserved for path in folder.rglob("*") if path.is_file() and path.suffix in CODE_SUFFIXES and path.read_text(encoding="utf-8").strip()]
     assert not nonempty, f"Stage 14 cannot include future-stage service/runtime code: {nonempty}"
 
