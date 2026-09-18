@@ -1,23 +1,22 @@
 # ULPF-X
 
-Universal Log Pre-processing Framework (ULPF-X) starts contract-first. This Stage
-0 repository defines the stable exchanges between future ingestion, normalization,
-validation, and assurance components.
+Universal Log Pre-processing Framework (ULPF-X) is contract-first. The current
+Stage 14 delivers a measured, validation-linked Telemetry Passport.
 
-## Stage 0 scope
+## Stage 14 scope
 
-- JSON Schema contracts for raw envelopes, normalized events, field lineage,
-  parser specifications, and telemetry passports.
-- Valid examples and a local contract-validation test.
-- Repository, Docker Compose, and CI skeletons only.
+- A versioned Telemetry Passport contract with certified and unmeasured states.
+- An evidence-only passport builder and a local assurance gate.
+- Certification, metric, drift, and validation linkage rules that reject
+  fabricated or placeholder numeric values.
 
-No application service, parser runtime, UI, AI, database, or external dependency
-is implemented in this stage.
+No Stage 15+ validation, drift repair, database, UI, or API functionality is
+implemented by this stage.
 
 ## Verify
 
-Run `make test-contracts`. The test uses Python's standard library and validates
-every `fixtures/contracts/*.json` file against its declared schema.
+Run `make test-passport`. The test uses Python's standard library and validates
+the contract plus both certified and uncertified assurance behavior.
 
 ## Contracts
 

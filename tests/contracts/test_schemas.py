@@ -32,12 +32,41 @@ def resolve(schema: dict[str, Any], root: dict[str, Any]) -> dict[str, Any]:
 
 def validate(value: Any, schema: dict[str, Any], root: dict[str, Any], path: str = "$") -> None:
     schema = resolve(schema, root)
+    for branch in schema.get("allOf", []):
+        validate(value, branch, root, path)
+    if "if" in schema:
+        try:
+            validate(value, schema["if"], root, path)
+        except AssertionError:
+            if "else" in schema:
+                validate(value, schema["else"], root, path)
+        else:
+            if "then" in schema:
+                validate(value, schema["then"], root, path)
+    if "oneOf" in schema:
+        valid_branches = 0
+        for branch in schema["oneOf"]:
+            try:
+                validate(value, branch, root, path)
+                valid_branches += 1
+            except AssertionError:
+                pass
+        if valid_branches != 1:
+            fail(path, "must match exactly one oneOf branch")
+        return
     if "const" in schema and value != schema["const"]:
         fail(path, f"must equal {schema['const']!r}")
     if "enum" in schema and value not in schema["enum"]:
         fail(path, f"must be one of {schema['enum']!r}")
-    kind = schema.get("type")
-    if kind == "object":
+    kinds = schema.get("type")
+    kinds = kinds if isinstance(kinds, list) else [kinds] if kinds else []
+    if not kinds and "properties" in schema:
+        # JSON Schema's properties keyword applies to object instances even when
+        # the author omits an explicit type declaration (as conditional branches do).
+        kinds = ["object"]
+    if value is None and "null" in kinds:
+        return
+    if kinds and "object" in kinds:
         if not isinstance(value, dict): fail(path, "must be an object")
         for name in schema.get("required", []):
             if name not in value: fail(path, f"missing required property {name!r}")
@@ -49,11 +78,11 @@ def validate(value: Any, schema: dict[str, Any], root: dict[str, Any], path: str
             child = properties.get(name, schema.get("additionalProperties"))
             if isinstance(child, dict): validate(item, child, root, f"{path}.{name}")
         if len(value) < schema.get("minProperties", 0): fail(path, "has too few properties")
-    elif kind == "array":
+    elif "array" in kinds:
         if not isinstance(value, list): fail(path, "must be an array")
         if len(value) < schema.get("minItems", 0): fail(path, "has too few items")
         for index, item in enumerate(value): validate(item, schema.get("items", {}), root, f"{path}[{index}]")
-    elif kind == "string":
+    elif "string" in kinds:
         if not isinstance(value, str): fail(path, "must be a string")
         if len(value) < schema.get("minLength", 0): fail(path, "is shorter than minLength")
         if "pattern" in schema and not re.fullmatch(schema["pattern"], value): fail(path, "does not match pattern")
@@ -63,9 +92,9 @@ def validate(value: Any, schema: dict[str, Any], root: dict[str, Any], path: str
         if schema.get("format") == "ipv4":
             octets = value.split(".")
             if len(octets) != 4 or any(not p.isdigit() or not 0 <= int(p) <= 255 for p in octets): fail(path, "must be IPv4")
-    elif kind == "integer":
+    elif "integer" in kinds:
         if not isinstance(value, int) or isinstance(value, bool): fail(path, "must be an integer")
-    elif kind == "number":
+    elif "number" in kinds:
         if not isinstance(value, (int, float)) or isinstance(value, bool): fail(path, "must be a number")
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         if value < schema.get("minimum", value): fail(path, "is below minimum")
@@ -88,16 +117,35 @@ def test_examples_validate() -> None:
         print(f"PASS {example_path.name} -> {schema_path.name}")
 
 
-def test_no_premature_service_code() -> None:
-    """Guard: only Stage-6 approved dirs may contain service code."""
-    # Stage 6 permits: apps/ingest-gateway, packages/parser-runtime, apps/normalize-worker, packages/exporters
-    # Everything else must remain placeholder-only.
-    reserved = [ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "ml", ROOT / "infra", ROOT / "packages" / "detection-contracts"]
+def test_passport_state_rules() -> None:
+    schema = json.loads((CONTRACTS / "telemetry_passport.schema.json").read_text(encoding="utf-8"))
+    unmeasured = {
+        "schema_version": "1.1", "source_id": "new-source",
+        "parser": {"id": "new.source", "version": "1.0.0"},
+        "validation": {"status": "NOT_YET_MEASURED", "run_id": None, "completed_at": None},
+        "certification": {"status": "NOT_CERTIFIED", "timestamp": None},
+        "scores": {key: "NOT YET MEASURED" for key in ["extraction_accuracy", "semantic_accuracy", "raw_retention", "unknown_field_retention", "detection_preservation"]},
+        "drift": {"state": "NOT_YET_MEASURED", "observed_at": None},
+    }
+    validate(unmeasured, schema, schema)
+    unmeasured["scores"]["semantic_accuracy"] = 0.99
+    try:
+        validate(unmeasured, schema, schema)
+    except AssertionError:
+        print("PASS telemetry passport rejects an uncertified numeric metric")
+    else:
+        raise AssertionError("uncertified passport must not expose a numeric metric")
+
+
+def test_no_future_stage_service_code() -> None:
+    """Guard: Stage 14 permits assurance code but not future platform/API work."""
+    reserved = [ROOT / "apps" / "control-api", ROOT / "apps" / "web", ROOT / "infra", ROOT / "packages" / "detection-contracts"]
     nonempty = [path.relative_to(ROOT) for folder in reserved for path in folder.rglob("*") if path.is_file() and path.suffix in CODE_SUFFIXES and path.read_text(encoding="utf-8").strip()]
-    assert not nonempty, f"Stage 6 cannot include service/runtime code outside approved dirs: {nonempty}"
+    assert not nonempty, f"Stage 14 cannot include future-stage service/runtime code: {nonempty}"
 
 
 if __name__ == "__main__":
     test_examples_validate()
-    test_no_premature_service_code()
-    print("PASS Stage 6 contract gate")
+    test_passport_state_rules()
+    test_no_future_stage_service_code()
+    print("PASS Stage 14 contract gate")

@@ -1,8 +1,8 @@
 {
   "$schema": "../../packages/contracts/telemetry_passport.schema.json",
-  "schema_version": "1.0", "source_id": "demo-firewall", "parser": {"id": "demo.firewall.kv", "version": "1.4.0"},
-  "validation_run_id": "validation-2026-09-16-demo-firewall-001",
+  "schema_version": "1.1", "source_id": "demo-firewall", "parser": {"id": "demo.firewall.kv", "version": "1.4.0"},
+  "validation": {"status": "PASSED", "run_id": "validation-2026-09-16-demo-firewall-001", "completed_at": "2026-09-16T10:00:00Z"},
   "certification": {"status": "CERTIFIED", "timestamp": "2026-09-16T10:00:00Z"},
   "scores": {"extraction_accuracy": 0.993, "semantic_accuracy": 0.989, "raw_retention": 1.0, "unknown_field_retention": 1.0, "detection_preservation": 1.0},
-  "drift": {"state": "STABLE"}
+  "drift": {"state": "STABLE", "observed_at": "2026-09-16T10:00:00Z"}
 }

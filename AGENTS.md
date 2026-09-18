@@ -2,11 +2,11 @@
 
 ## Stage gate
 
-This repository is currently at Stage 6: ECS + OCSF Exporters. Only
-`apps/ingest-gateway`, `packages/parser-runtime`, `apps/normalize-worker`,
-and `packages/exporters` may contain service code. Do not implement databases, UI, AI, or
-control-plane services until the relevant versioned contract exists and
-its examples validate.
+This repository is currently at Stage 14: Telemetry Passport. Stages 1-13 are
+complete. The assurance record may use completed validation evidence, but it
+must never manufacture numeric metrics, certification, or drift observations.
+Do not implement Stage 15+ validation, drift-repair, database, UI, or API work
+until its versioned contract exists and its examples validate.
 
 ## Non-negotiable rules
 
@@ -19,6 +19,9 @@ its examples validate.
 4. Preserve unknown fields. Abstain instead of inventing an uncertain mapping.
 5. Breaking contract changes require an ADR and a schema version increment.
 6. Every contract change must add/update an example and pass `make test-contracts`.
+7. A Telemetry Passport is certified only from a passed validation run with a
+   complete measured metric set and a measured drift state. Otherwise expose
+   `NOT YET MEASURED`, never a placeholder number.
 
 ## Layout
 
