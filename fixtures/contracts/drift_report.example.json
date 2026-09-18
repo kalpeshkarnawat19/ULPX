@@ -1,0 +1,35 @@
+{
+  "$schema": "../../packages/contracts/drift_report.schema.json",
+  "schema_version": "1.0",
+  "source_id": "demo-firewall",
+  "parser": {
+    "id": "demo.firewall.kv",
+    "version": "1.4.0"
+  },
+  "drift_state": "STABLE",
+  "observed_at": "2026-09-18T12:00:00Z",
+  "window": {
+    "start_time": "2026-09-18T11:00:00Z",
+    "end_time": "2026-09-18T12:00:00Z",
+    "baseline_run_id": "baseline-2026-09-18-001",
+    "sample_count": 500
+  },
+  "signals": {
+    "parse_failure_rate": 0.002,
+    "unknown_field_ratio": 0.01,
+    "type_violation_rate": 0.0,
+    "key_set_distance": 0.04,
+    "distribution_divergence": 0.03
+  },
+  "thresholds": {
+    "parse_failure_rate": 0.02,
+    "unknown_field_ratio": 0.05,
+    "type_violation_rate": 0.005,
+    "key_set_distance": 0.15,
+    "distribution_divergence": 0.20
+  },
+  "drift_details": [
+    "All observed metrics within configured baseline stability bounds"
+  ],
+  "remediation_recommended": false
+}

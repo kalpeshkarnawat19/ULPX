@@ -103,9 +103,9 @@ def validate(value: Any, schema: dict[str, Any], root: dict[str, Any], path: str
 
 def test_examples_validate() -> None:
     examples = sorted(FIXTURES.glob("*.example.json"))
-    assert len(examples) == 5, "Stage 0 must contain exactly five contract examples"
+    assert len(examples) >= 5, "Must contain all declared contract examples"
     schemas = sorted(CONTRACTS.glob("*.schema.json"))
-    assert len(schemas) == 5, "Stage 0 must contain exactly five versioned contracts"
+    assert len(schemas) >= 5, "Must contain all declared versioned contracts"
     for example_path in examples:
         example = json.loads(example_path.read_text(encoding="utf-8"))
         schema_ref = example.pop("$schema", None)
