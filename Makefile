@@ -78,7 +78,7 @@ demo-check:
 	$(PYTHON) tests/demo/test_demo.py
 
 test-pretty:
-	$(PYTHON) scripts/pretty_test.py
+	$(PYTHON) scripts/pretty_test.py $(ARGS)
 
 demo:
 	$(PYTHON) scripts/demo.py
