@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 ULPF-X Continuous Security Audit & Verification Engine
 Renders an executive cyber-grade terminal dashboard with live status indicators,
@@ -329,12 +330,12 @@ def inspect_subsystem(step_idx: int) -> int:
 
 
 def list_subsystems() -> None:
-    table = Table(title="[bold cyan]Index of Available Architectural Subsystems[/bold cyan]", box=box.ROUNDED, expand=True)
+    table = Table(title="[bold cyan]Index of Available Architectural Subsystems[/bold cyan]", box=box.ROUNDED)
     table.add_column("#", justify="right", width=3, style="dim")
-    table.add_column("Subsystem Name", style="bold white", min_width=25)
-    table.add_column("Architectural Layer", width=20)
+    table.add_column("Subsystem Name", style="bold white")
+    table.add_column("Layer", width=18)
     table.add_column("Verified Scope Guard", style="yellow")
-    table.add_column("Inspect Command", style="dim green", width=25)
+    table.add_column("Shortcut", style="dim green", no_wrap=True)
 
     for idx, (name, layer, invariant, cmd, lang) in enumerate(TEST_STEPS, start=1):
         table.add_row(
@@ -342,7 +343,7 @@ def list_subsystems() -> None:
             name,
             Text.from_markup(format_layer(layer)),
             invariant,
-            f"python3 scripts/audit.py -i {idx}",
+            f"make inspect-{idx}",
         )
     console.print()
     console.print(table)
@@ -496,7 +497,7 @@ def run_test_suite() -> int:
 
     console.print()
     console.print(Text.from_markup(
-        "[dim]Quick Actions: Run [bold cyan]python3 scripts/audit.py --inspect 10[/bold cyan] (or [bold cyan]make audit ARGS=\"--inspect 10\"[/bold cyan]), "
+        "[dim]Quick Actions: Run [bold cyan]python3 scripts/audit.py 10[/bold cyan] (or [bold cyan]make inspect-10[/bold cyan]), "
         "or [bold cyan]make demo[/bold cyan] for live interactive walkthrough.[/dim]\n"
     ))
     return 0 if failed_count == 0 else 1
@@ -504,15 +505,21 @@ def run_test_suite() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="ULPF-X Cyber-Grade Verification Dashboard & Inspector")
+    parser.add_argument("target", nargs="?", help="Subsystem index (1-23) to inspect, or 'list'")
     parser.add_argument("-i", "--inspect", type=int, help="Inspect a specific subsystem in detail (1-23)")
     parser.add_argument("-l", "--list", action="store_true", help="List all available architectural subsystems")
     args = parser.parse_args()
 
-    if args.list:
+    if args.list or (args.target and args.target.lower() in ("list", "ls")):
         list_subsystems()
         return 0
     if args.inspect is not None:
         return inspect_subsystem(args.inspect)
+    if args.target is not None:
+        if args.target.isdigit():
+            return inspect_subsystem(int(args.target))
+        console.print(f"[bold red]Error:[/bold red] Unknown target '{args.target}'. Specify a subsystem number (1-23) or 'list'.")
+        return 1
     return run_test_suite()
 
 

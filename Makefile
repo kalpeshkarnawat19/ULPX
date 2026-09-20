@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test-passport test-detection-contracts test-dps test-profiler test-mapper test-ai-assist test-compiler test-onboarding test-validation test-drift test-semantic-drift test-shadow test-self-heal test-bench bench test-airgap demo-check test-pretty demo test-ml test
+.PHONY: test-contracts test-ingest test-firewall test-parser test-ir test-lineage test-exporters test-passport test-detection-contracts test-dps test-profiler test-mapper test-ai-assist test-compiler test-onboarding test-validation test-drift test-semantic-drift test-shadow test-self-heal test-bench bench test-airgap demo-check audit test-pretty demo test-ml test
 
 test-contracts:
 	$(PYTHON) tests/contracts/test_schemas.py
@@ -79,6 +79,12 @@ demo-check:
 
 audit:
 	$(PYTHON) scripts/audit.py $(ARGS)
+
+inspect-%:
+	$(PYTHON) scripts/audit.py $*
+
+audit-%:
+	$(PYTHON) scripts/audit.py $*
 
 test-pretty: audit
 
