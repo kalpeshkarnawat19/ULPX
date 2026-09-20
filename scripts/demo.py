@@ -35,7 +35,6 @@ console = Console()
 def render_banner() -> None:
     banner = Text()
     banner.append("🛡️  ULPF-X : CONTINUOUSLY VERIFIED SECURITY-TELEMETRY TRUST LAYER\n", style="bold cyan")
-    banner.append("National Technical Research Organisation (NTRO) • Problem Statement SIH26156\n", style="dim white")
     banner.append("Live Evaluator & Judge Interactive Demonstration", style="bold green")
     console.print(Panel(banner, border_style="bright_blue", box=box.ROUNDED))
 
