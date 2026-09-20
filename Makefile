@@ -77,8 +77,10 @@ test-airgap:
 demo-check:
 	$(PYTHON) tests/demo/test_demo.py
 
-test-pretty:
-	$(PYTHON) scripts/pretty_test.py $(ARGS)
+audit:
+	$(PYTHON) scripts/audit.py $(ARGS)
+
+test-pretty: audit
 
 demo:
 	$(PYTHON) scripts/demo.py

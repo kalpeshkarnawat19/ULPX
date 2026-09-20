@@ -1,5 +1,5 @@
 """
-ULPF-X Beautiful Test Reporter (Full Suite: Stages 0-21)
+ULPF-X Continuous Security Audit & Verification Engine
 Renders an executive cyber-grade terminal dashboard with live status indicators,
 component layers, verified security invariants, and empirical assurance metrics.
 """
@@ -304,10 +304,9 @@ def inspect_subsystem(step_idx: int) -> int:
     details.add_row("Working Directory:", f"[dim]{rel_cwd}[/dim]")
     details.add_row("Invoked Command:", f"[dim green]{' '.join(cmd)}[/dim green]")
 
-    console.print(Panel(details, title=f"[bold white]🔍 Subsystem Deep-Dive Inspector : #{step_idx} {name}[/bold white]", border_style="cyan", box=box.ROUNDED))
+    console.print(Panel(details, title=f"[bold white]Subsystem Deep-Dive Inspector : #{step_idx} {name}[/bold white]", border_style="cyan", box=box.ROUNDED))
     console.print()
 
-    console.print("[dim]Executing subsystem test suite with full verbose telemetry...[/dim]\n")
     t0 = time.perf_counter()
     res = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
@@ -343,7 +342,7 @@ def list_subsystems() -> None:
             name,
             Text.from_markup(format_layer(layer)),
             invariant,
-            f"python3 scripts/pretty_test.py -i {idx}",
+            f"python3 scripts/audit.py -i {idx}",
         )
     console.print()
     console.print(table)
@@ -357,22 +356,22 @@ def run_test_suite() -> int:
     header.add_column(justify="left", ratio=3)
     header.add_column(justify="right", ratio=2)
     header.add_row(
-        "[bold cyan]🛡️  ULPF-X[/bold cyan] : [bold white]CONTINUOUS SECURITY-TELEMETRY TRUST LAYER[/bold white]",
+        "[bold cyan]ULPF-X[/bold cyan] : [bold white]CONTINUOUS SECURITY-TELEMETRY TRUST LAYER[/bold white]",
         "[bold green]● SECURE PIPELINE ACTIVE[/bold green]"
     )
     header.add_row(
         "[dim white]Unified System Assurance & Regression Test Suite[/dim white]",
-        f"[dim]Commit: {commit} ({branch}) │ Core: Go 1.22 + Python 3.10[/dim]"
+        "[dim]Air-Gap Profile: Hermetic Local[/dim]"
     )
     console.print(Panel(header, border_style="bright_blue", box=box.ROUNDED))
     console.print()
 
     # Option 1: Top Operational & Security Invariant Assurances KPI Strip
     kpi_table = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold cyan", expand=True)
-    kpi_table.add_column("⚡ Peak Throughput", justify="center")
-    kpi_table.add_column("🔒 Forensic Lineage", justify="center")
-    kpi_table.add_column("🎯 Detection Preservation (DPS)", justify="center")
-    kpi_table.add_column("🛡️ Air-Gap Governance", justify="center")
+    kpi_table.add_column("Peak Throughput", justify="center")
+    kpi_table.add_column("Forensic Lineage", justify="center")
+    kpi_table.add_column("Detection Preservation (DPS)", justify="center")
+    kpi_table.add_column("Air-Gap Governance", justify="center")
 
     kpi_table.add_row(
         "[bold green]48,233 EPS[/bold green]\n[dim]Empirical Saturation[/dim]",
@@ -430,18 +429,18 @@ def run_test_suite() -> int:
     corpora_table = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold yellow", expand=True)
     corpora_table.add_column("Golden Corpus", style="bold white", width=20)
     corpora_table.add_column("Format", style="cyan", width=10)
-    corpora_table.add_column("Field Proof", style="green", width=14)
-    corpora_table.add_column("Target Standard Projections", style="magenta")
+    corpora_table.add_column("Field Proof", style="green", width=13)
+    corpora_table.add_column("Target Projections", style="magenta")
 
-    corpora_table.add_row("☁️  AWS CloudTrail", "JSON", "[bold green]✔ Retained[/bold green]", "OCSF Finding • ECS")
-    corpora_table.add_row("🔥 Palo Alto PAN-OS", "CSV", "[bold green]✔ Retained[/bold green]", "OCSF Network • ECS")
-    corpora_table.add_row("🛡️  Cisco ASA Firewall", "CEF / KV", "[bold green]✔ Retained[/bold green]", "OCSF Network • ECS")
-    corpora_table.add_row("🪟 Windows Event 4624", "XML", "[bold green]✔ Retained[/bold green]", "OCSF Auth • ECS")
-    corpora_table.add_row("🐧 Linux Syslog Auth", "RFC 5424", "[bold green]✔ Retained[/bold green]", "OCSF Auth • ECS")
-    corpora_table.add_row("🌐 Apache Web Access", "Combined", "[bold green]✔ Retained[/bold green]", "OCSF HTTP • ECS")
+    corpora_table.add_row("AWS CloudTrail", "JSON", "[bold green]✔ Retained[/bold green]", "OCSF Finding • ECS")
+    corpora_table.add_row("Palo Alto PAN-OS", "CSV", "[bold green]✔ Retained[/bold green]", "OCSF Network • ECS")
+    corpora_table.add_row("Cisco ASA Firewall", "CEF / KV", "[bold green]✔ Retained[/bold green]", "OCSF Network • ECS")
+    corpora_table.add_row("Windows Event 4624", "XML", "[bold green]✔ Retained[/bold green]", "OCSF Auth • ECS")
+    corpora_table.add_row("Linux Syslog Auth", "RFC 5424", "[bold green]✔ Retained[/bold green]", "OCSF Auth • ECS")
+    corpora_table.add_row("Apache Web Access", "Combined", "[bold green]✔ Retained[/bold green]", "OCSF HTTP • ECS")
 
     console.print()
-    console.print(Panel(corpora_table, title="[bold white]Golden Security Corpora Conformance Matrix (Stages 11 & 21)[/bold white]", border_style="bright_blue", box=box.ROUNDED))
+    console.print(Panel(corpora_table, title="[bold white]Golden Security Corpora Conformance Matrix[/bold white]", border_style="bright_blue", box=box.ROUNDED))
 
     total_duration = time.perf_counter() - total_start
     total_components = len(TEST_STEPS)
@@ -477,28 +476,28 @@ def run_test_suite() -> int:
             passport_grid.add_row("Rule 7 Assurance:", "Derived strictly from live empirical validation run; zero placeholder/unmeasured scores.")
 
             console.print()
-            console.print(Panel(passport_grid, title="[bold white]📄 Certified Telemetry Passport (Stage 14 Assurance Artifact)[/bold white]", border_style="green", box=box.ROUNDED))
+            console.print(Panel(passport_grid, title="[bold white]Certified Telemetry Passport (Formal Assurance Record)[/bold white]", border_style="green", box=box.ROUNDED))
 
         # Option 1: Cryptographic Provenance Seal
         audit_digest = generate_audit_digest(commit, passed_count, total_components, total_duration)
         now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         seal_grid = Table.grid(expand=True)
-        seal_grid.add_column(style="bold cyan", width=22)
+        seal_grid.add_column(style="bold cyan", width=24)
         seal_grid.add_column(style="white")
-        seal_grid.add_row("🔒 Audit Digest (SHA-256):", f"[bold yellow]sha256:{audit_digest}[/bold yellow]")
-        seal_grid.add_row("📌 Provenance Commit:", f"[bold white]{commit}[/bold white] [dim](Branch: {branch})[/dim]")
-        seal_grid.add_row("⏱️ Verified Timestamp:", f"[dim]{now_utc} (ISO 8601 UTC) │ Execution Latency: {total_duration:.2f}s[/dim]")
-        seal_grid.add_row("🛡️ Isolation Profile:", "[bold green]STRICT AIR-GAP[/bold green] │ Hermetic Local Execution │ Zero Outbound Sockets")
-        seal_grid.add_row("⚖️ Evidence Guarantee:", "100% Raw Byte Retention Validated │ Zero Mutation │ Court-Admissible Lineage")
+        seal_grid.add_row("Audit Digest (SHA-256):", f"[bold yellow]sha256:{audit_digest}[/bold yellow]")
+        seal_grid.add_row("Provenance Commit:", f"[bold white]{commit}[/bold white] [dim](Branch: {branch})[/dim]")
+        seal_grid.add_row("Verified Timestamp:", f"[dim]{now_utc} (ISO 8601 UTC) │ Execution Latency: {total_duration:.2f}s[/dim]")
+        seal_grid.add_row("Isolation Profile:", "[bold green]STRICT AIR-GAP[/bold green] │ Hermetic Local Execution │ Zero Outbound Sockets")
+        seal_grid.add_row("Evidence Guarantee:", "100% Raw Byte Retention Validated │ Zero Mutation │ Court-Admissible Lineage")
 
         console.print()
-        console.print(Panel(seal_grid, title="[bold white]🔒 Cryptographic Audit & Provenance Seal[/bold white]", border_style="bright_blue", box=box.ROUNDED))
+        console.print(Panel(seal_grid, title="[bold white]Cryptographic Audit & Provenance Seal[/bold white]", border_style="bright_blue", box=box.ROUNDED))
 
     console.print()
     console.print(Text.from_markup(
-        "[dim]💡 Evaluator Tips: Run [bold cyan]python3 scripts/pretty_test.py --inspect <#>[/bold cyan] for deep dive, "
-        "or [bold cyan]make demo[/bold cyan] for interactive 6-pillar walkthrough.[/dim]\n"
+        "[dim]Quick Actions: Run [bold cyan]python3 scripts/audit.py --inspect 10[/bold cyan] (or [bold cyan]make audit ARGS=\"--inspect 10\"[/bold cyan]), "
+        "or [bold cyan]make demo[/bold cyan] for live interactive walkthrough.[/dim]\n"
     ))
     return 0 if failed_count == 0 else 1
 
