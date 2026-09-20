@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .env
+work/demo/
 
 # Binaries
 apps/ingest-gateway/ingest-gateway

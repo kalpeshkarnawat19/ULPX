@@ -1,0 +1,26 @@
+name: ulpf-x-airgap
+
+# Offline deployment profile. Images must be loaded into the local Docker daemon
+# with the exact tags below before startup; Compose is forbidden from pulling.
+services:
+  ingest-gateway:
+    image: ulpfx-ingest-gateway:local
+    pull_policy: never
+    read_only: true
+    environment:
+      ULPFX_AIRGAP: "true"
+      ULPFX_OUTBOUND_NETWORK: "disabled"
+    networks: [ulpfx-internal]
+
+  normalize-worker:
+    image: ulpfx-normalize-worker:local
+    pull_policy: never
+    read_only: true
+    environment:
+      ULPFX_AIRGAP: "true"
+      ULPFX_OUTBOUND_NETWORK: "disabled"
+    networks: [ulpfx-internal]
+
+networks:
+  ulpfx-internal:
+    internal: true

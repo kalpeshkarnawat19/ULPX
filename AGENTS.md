@@ -2,11 +2,10 @@
 
 ## Stage gate
 
-This repository is currently at Stage 19: Performance Benchmarking. Stages 1-18 are
-complete. The assurance record may use completed validation evidence, but it
-must never manufacture numeric metrics, certification, or drift observations.
-Do not implement Stage 20+ air-gap validation, database, UI, or API work
-until its versioned contract exists and its examples validate.
+This repository is currently at Stage 21: SIH Demo Polish. Stages 1-20 are
+complete. Air-gap execution must use local artifacts only and must never pull a
+public image or call a public service. The frontend is not implemented: do not
+seed, mock, or claim dashboard behavior.
 
 ## Non-negotiable rules
 
@@ -22,6 +21,8 @@ until its versioned contract exists and its examples validate.
 7. A Telemetry Passport is certified only from a passed validation run with a
    complete measured metric set and a measured drift state. Otherwise expose
    `NOT YET MEASURED`, never a placeholder number.
+8. Demo rehearsal must derive its evidence from real fixtures and validation
+   execution. It may not contain fabricated scores or manual data edits.
 
 ## Layout
 
