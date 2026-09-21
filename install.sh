@@ -18,19 +18,37 @@ echo "  ✓ Registered with CMake User Package Registry"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
-cat << 'LAUNCHER' > "$BIN_DIR/ulpx"
+if command -v python3 >/dev/null 2>&1; then
+    PY_EXEC="$(command -v python3)"
+elif command -v python >/dev/null 2>&1; then
+    PY_EXEC="$(command -v python)"
+else
+    echo "Python 3 is required but was not found in PATH." >&2
+    exit 1
+fi
+
+echo "Installing Python dependencies..."
+if [ -f "$INSTALL_DIR/requirements.txt" ]; then
+    "$PY_EXEC" -m pip install --quiet -r "$INSTALL_DIR/requirements.txt"
+else
+    "$PY_EXEC" -m pip install --quiet rich psutil
+fi
+
+cat << LAUNCHER > "$BIN_DIR/ulpx"
 #!/usr/bin/env bash
-python "$HOME/.ulpx/scripts/demo.py" "$@"
+exec "$PY_EXEC" "\$HOME/.ulpx/scripts/demo.py" "\$@"
 LAUNCHER
 
-cat << 'LAUNCHER' > "$BIN_DIR/ulpx-test"
+cat << LAUNCHER > "$BIN_DIR/ulpx-test"
 #!/usr/bin/env bash
-python "$HOME/.ulpx/scripts/audit.py" "$@"
+exec "$PY_EXEC" "\$HOME/.ulpx/scripts/audit.py" "\$@"
 LAUNCHER
 
 chmod +x "$BIN_DIR/ulpx" "$BIN_DIR/ulpx-test"
 
 # 4. Inject environment hooks into shell profile files
+touch "$HOME/.bashrc" "$HOME/.bash_profile"
+
 SHELL_HOOK="
 # --- ULPF-X GLOBAL SYSTEM INTEGRATION ---
 export ULPX_HOME=\"$INSTALL_DIR\"

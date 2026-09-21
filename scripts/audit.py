@@ -309,7 +309,19 @@ def inspect_subsystem(step_idx: int) -> int:
     console.print()
 
     t0 = time.perf_counter()
-    res = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        res = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    except FileNotFoundError:
+        console.print(
+            Panel(
+                Text(f"SKIPPED: Command '{cmd[0]}' was not found in the host PATH.", style="yellow"),
+                title="[bold yellow]EXECUTION SKIPPED[/bold yellow]",
+                border_style="yellow",
+                box=box.ROUNDED,
+            )
+        )
+        console.print()
+        return 1
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
 
     output_text = res.stdout if res.stdout else res.stderr
@@ -400,13 +412,29 @@ def run_test_suite() -> int:
 
     passed_count = 0
     failed_count = 0
+    skipped_count = 0
     total_start = time.perf_counter()
 
     with Live(table, console=console, refresh_per_second=10):
         for idx, (name, layer, invariant, cmd, lang) in enumerate(TEST_STEPS, start=1):
             cwd = resolve_cwd(name, lang)
             t0 = time.perf_counter()
-            res = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                res = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            except FileNotFoundError:
+                skipped_count += 1
+                failed_count += 1
+                elapsed_ms = (time.perf_counter() - t0) * 1000.0
+                status_text = Text.from_markup("[bold yellow]SKIPPED[/bold yellow]")
+                table.add_row(
+                    str(idx),
+                    name,
+                    Text.from_markup(format_layer(layer)),
+                    invariant,
+                    f"{elapsed_ms:.1f} ms",
+                    status_text,
+                )
+                continue
             t1 = time.perf_counter()
             elapsed_ms = (t1 - t0) * 1000.0
 
