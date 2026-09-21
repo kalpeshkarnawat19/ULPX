@@ -449,7 +449,7 @@ def run_test_suite() -> int:
     if failed_count == 0:
         summary_markup = (
             f"[bold green]✔ EMPIRICAL VERIFICATION COMPLETE: All {total_components} Subsystems Validated ({total_duration:.2f}s total)[/bold green]\n"
-            "  • [bold green]✔[/bold green] [bold white]246 / 246[/bold white] Automated Unit & Integration Tests Passed ([green]Zero Failures, Zero Skips[/green])\n"
+            "  • [bold green]✔[/bold green] [bold white]262 / 262[/bold white] Automated Unit & Integration Tests Passed ([green]Zero Failures, Zero Skips[/green])\n"
             "  • [bold green]✔[/bold green] [bold white]10 / 10[/bold white] Versioned JSON Schema Contracts Validated ([dim]Draft-07 Conformance[/dim])\n"
             "  • [bold green]✔[/bold green] [bold white]6 / 6[/bold white] Golden Security Corpora Verified ([dim]Full Extraction Integrity across All Formats[/dim])\n"
             "  • [bold green]✔[/bold green] [bold white]Air-Gap Isolation:[/bold white] Hermetic Local Execution ([green]Zero Outbound Network / DNS Calls[/green])\n"

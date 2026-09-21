@@ -248,4 +248,90 @@ func (e *Engine) registerDefaultRules() {
 			return isProxyDeny && url != ""
 		},
 	})
+
+	// 7. Lateral Movement Sequences (MITRE T1021)
+	e.RegisterRule(DetectionRule{
+		ID:          "DET-007",
+		Name:        "Lateral Movement Detection Contract",
+		Description: "Preserves internal lateral connection semantics (ports 445, 3389, 22, 5985 with internal src and dst endpoints).",
+		Severity:    SeverityHigh,
+		IsMandatory: true,
+		Predicate: func(event map[string]interface{}) bool {
+			dstPort, hasPort := getNestedInt(event, "dst", "port")
+			srcIP := getNestedString(event, "src", "ip")
+			dstIP := getNestedString(event, "dst", "ip")
+			action := strings.ToLower(getNestedString(event, "event", "action"))
+			outcome := strings.ToLower(getNestedString(event, "event", "outcome"))
+
+			isLateralPort := hasPort && (dstPort == 445 || dstPort == 3389 || dstPort == 22 || dstPort == 5985 || dstPort == 135)
+			hasEndpoints := srcIP != "" && dstIP != ""
+			isAllowed := strings.Contains(action, "allow") || strings.Contains(action, "accept") ||
+				strings.Contains(action, "connect") || outcome == "success"
+
+			return isLateralPort && hasEndpoints && isAllowed
+		},
+	})
+
+	// 8. Privilege Escalation Events (MITRE T1548 / T1078)
+	e.RegisterRule(DetectionRule{
+		ID:          "DET-008",
+		Name:        "Privilege Escalation Detection Contract",
+		Description: "Preserves user elevation and privileged credential access semantics (target user root/admin, elevation actions).",
+		Severity:    SeverityCritical,
+		IsMandatory: true,
+		Predicate: func(event map[string]interface{}) bool {
+			user := strings.ToLower(getNestedString(event, "user", "name"))
+			action := strings.ToLower(getNestedString(event, "event", "action"))
+			cls := strings.ToLower(getNestedString(event, "event", "class"))
+
+			isPrivilegedUser := user == "root" || user == "administrator" || user == "system" || strings.Contains(user, "admin")
+			isElevation := strings.Contains(action, "elevat") || strings.Contains(action, "sudo") ||
+				strings.Contains(action, "runas") || strings.Contains(cls, "privilege")
+
+			return isPrivilegedUser && isElevation
+		},
+	})
+
+	// 9. Data Exfiltration Volume Spike (MITRE T1048 / T1041)
+	e.RegisterRule(DetectionRule{
+		ID:          "DET-009",
+		Name:        "Data Exfiltration Spike Contract",
+		Description: "Preserves high outbound transfer bytes and egress network activity semantics.",
+		Severity:    SeverityHigh,
+		IsMandatory: false,
+		Predicate: func(event map[string]interface{}) bool {
+			bytesOut, hasBytes := getNestedInt(event, "network", "bytes_out")
+			if !hasBytes {
+				bytesOut, hasBytes = getNestedInt(event, "network", "bytes")
+			}
+			cls := strings.ToLower(getNestedString(event, "event", "class"))
+			dstIP := getNestedString(event, "dst", "ip")
+
+			isHighEgress := hasBytes && bytesOut >= 10000000 // >= 10 MB egress
+			isNetwork := cls == "network" || dstIP != ""
+
+			return isHighEgress && isNetwork
+		},
+	})
+
+	// 10. Ransomware Rapid File Modification (MITRE T1486)
+	e.RegisterRule(DetectionRule{
+		ID:          "DET-010",
+		Name:        "Ransomware File Modification Contract",
+		Description: "Preserves mass file encryption, modification, and bulk deletion semantics.",
+		Severity:    SeverityCritical,
+		IsMandatory: true,
+		Predicate: func(event map[string]interface{}) bool {
+			action := strings.ToLower(getNestedString(event, "event", "action"))
+			cls := strings.ToLower(getNestedString(event, "event", "class"))
+			outcome := strings.ToLower(getNestedString(event, "event", "outcome"))
+
+			isFileClass := cls == "file" || cls == "filesystem" || strings.Contains(cls, "storage")
+			isDestructiveAction := strings.Contains(action, "encrypt") || strings.Contains(action, "ransom") ||
+				strings.Contains(action, "delete") || strings.Contains(action, "bulk_modify")
+			isSuccess := outcome == "success" || outcome == ""
+
+			return isFileClass && isDestructiveAction && isSuccess
+		},
+	})
 }

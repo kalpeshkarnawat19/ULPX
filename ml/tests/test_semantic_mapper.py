@@ -289,3 +289,118 @@ def test_strict_mapping_score_bounds(mapper):
         for cand in res.top_candidates:
             assert 0.0 <= cand.mapping_score <= 1.0
 
+
+# =====================================================================
+# 7. Priority 2: Adversarial, Abstention Stress & Disambiguation Tests
+# =====================================================================
+
+def test_adversarial_deceptive_field_names(mapper):
+    """Deceptive field names like 'destination_ip_not_real' must NOT be auto-accepted."""
+    deceptive_fields = [
+        ("destination_ip_not_real", DataType.STRING.value),
+        ("source_override_fake_val", DataType.STRING.value),
+        ("user_backup_temporary_token", DataType.STRING.value),
+        ("auth_attempt_spoofed_status", DataType.STRING.value),
+    ]
+    for field_name, dtype in deceptive_fields:
+        p = FieldProfile(name=field_name, inferred_type=dtype)
+        res = mapper.map_field(p)
+        # Never falsely AUTO_ACCEPTED
+        assert res.chosen_mapping.review_status != ReviewStatus.AUTO_ACCEPTED, (
+            f"Deceptive field {field_name} was falsely auto-accepted: {res.chosen_mapping.canonical_path}"
+        )
+
+
+def test_multi_ip_disambiguation(mapper):
+    """Disambiguate client_ip, server_ip, initiator_ip, and target_ip within the same profile."""
+    field_dict = {
+        "client_ip": FieldProfile(name="client_ip", inferred_type=DataType.IPV4.value, is_ip_candidate=True),
+        "server_ip": FieldProfile(name="server_ip", inferred_type=DataType.IPV4.value, is_ip_candidate=True),
+        "initiator_ip": FieldProfile(name="initiator_ip", inferred_type=DataType.IPV4.value, is_ip_candidate=True),
+        "target_ip": FieldProfile(name="target_ip", inferred_type=DataType.IPV4.value, is_ip_candidate=True),
+    }
+    report = mapper.map_fields(field_dict, source_id="multi_ip_firewall")
+    assert report.mappings["client_ip"].chosen_mapping.canonical_path == "src.ip"
+    assert report.mappings["initiator_ip"].chosen_mapping.canonical_path == "src.ip"
+    assert report.mappings["server_ip"].chosen_mapping.canonical_path == "dst.ip"
+    assert report.mappings["target_ip"].chosen_mapping.canonical_path == "dst.ip"
+
+
+def test_boundary_score_thresholds(mapper):
+    """Verify exact boundary enforcement: >= 0.95 AUTO, 0.80-0.94 HUMAN, < 0.80 ABSTAIN."""
+    assert mapper.AUTO_ACCEPT_THRESHOLD == 0.95
+    assert mapper.HUMAN_REVIEW_THRESHOLD == 0.80
+
+    # Strong exact match >= 0.95
+    p_exact = FieldProfile(name="source_ip", inferred_type=DataType.IPV4.value, is_ip_candidate=True)
+    res_exact = mapper.map_field(p_exact)
+    assert res_exact.chosen_mapping.mapping_score >= mapper.AUTO_ACCEPT_THRESHOLD
+    assert res_exact.chosen_mapping.review_status == ReviewStatus.AUTO_ACCEPTED
+
+    # Unknown field < 0.80
+    p_unknown = FieldProfile(name="unmapped_telemetry_sensor_flag", inferred_type=DataType.STRING.value)
+    res_unknown = mapper.map_field(p_unknown)
+    assert res_unknown.chosen_mapping.mapping_score < mapper.HUMAN_REVIEW_THRESHOLD
+    assert res_unknown.chosen_mapping.review_status == ReviewStatus.ABSTAIN
+
+
+def test_cross_protocol_aliases(mapper):
+    """Short network acronyms (c_ip, d_ip, sport, dport) map cleanly to canonical network paths."""
+    aliases = {
+        "c_ip": "src.ip",
+        "d_ip": "dst.ip",
+        "sport": "src.port",
+        "dport": "dst.port",
+    }
+    for acr, expected_canonical in aliases.items():
+        is_port = "port" in acr
+        dtype = DataType.INTEGER.value if is_port else DataType.IPV4.value
+        p = FieldProfile(name=acr, inferred_type=dtype, is_ip_candidate=not is_port)
+        res = mapper.map_field(p, event_family=EventFamily.FIREWALL_POLICY.value)
+        assert res.chosen_mapping.canonical_path == expected_canonical, (
+            f"Expected {acr} -> {expected_canonical}, got {res.chosen_mapping.canonical_path}"
+        )
+
+
+def test_conflicting_types_ip_as_float(mapper):
+    """Field named 'src_ip' with float data type must trigger hard type conflict."""
+    p = FieldProfile(name="src_ip", inferred_type=DataType.FLOAT.value, sample_values=[3.1415])
+    res = mapper.map_field(p)
+    assert res.chosen_mapping.review_status == ReviewStatus.ABSTAIN
+    assert any("hard_type_conflict" in ev for ev in res.chosen_mapping.evidence)
+
+
+def test_abstention_deep_extension_path(mapper):
+    """Unknown fields must preserve exact verbatim raw field name in extensions.source.<field>."""
+    p = FieldProfile(
+        name="proprietary_x_vendor_flag_v2",
+        inferred_type=DataType.STRING.value,
+        sample_values=["flag_alpha"],
+    )
+    res = mapper.map_field(p)
+    assert res.chosen_mapping.review_status == ReviewStatus.ABSTAIN
+    assert res.chosen_mapping.preserve_in_extensions is True
+    assert res.chosen_mapping.destination_path == "extensions.source.proprietary_x_vendor_flag_v2"
+
+
+def test_high_entropy_random_token_field(mapper):
+    """Random cryptographic hashes or nonsensical identifiers must abstain immediately."""
+    p = FieldProfile(
+        name="a7f83b9c02d1e4",
+        inferred_type=DataType.STRING.value,
+        sample_values=["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"],
+    )
+    res = mapper.map_field(p)
+    assert res.chosen_mapping.review_status == ReviewStatus.ABSTAIN
+    assert res.chosen_mapping.mapping_score < 0.60
+
+
+def test_event_family_firewall_vs_web_disambiguation(mapper):
+    """Event family context boosts appropriate canonical fields."""
+    p_method = FieldProfile(name="method", inferred_type=DataType.STRING.value)
+    # Under WEB_SESSION context, method should boost towards http.method
+    res_web = mapper.map_field(p_method, event_family=EventFamily.WEB_SESSION.value)
+    assert res_web.chosen_mapping.canonical_path == "http.method"
+    assert any("event_family_context" in ev for ev in res_web.chosen_mapping.evidence)
+
+

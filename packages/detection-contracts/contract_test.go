@@ -147,3 +147,203 @@ func TestDPSEmptyResults(t *testing.T) {
 		t.Errorf("expected error calculating DPS on empty results, got nil")
 	}
 }
+
+func TestEngine_DET007_LateralMovement(t *testing.T) {
+	engine := NewEngine()
+
+	// Internal SMB connection (port 445)
+	smbEvent := map[string]interface{}{
+		"event": map[string]interface{}{"action": "allow", "outcome": "success"},
+		"src":   map[string]interface{}{"ip": "10.0.1.10", "port": 49201},
+		"dst":   map[string]interface{}{"ip": "10.0.2.20", "port": 445},
+	}
+	res, err := engine.EvaluateRule("DET-007", smbEvent, true)
+	if err != nil {
+		t.Fatalf("unexpected error evaluating DET-007: %v", err)
+	}
+	if !res.Matched || !res.Preserved {
+		t.Errorf("expected DET-007 to match SMB lateral movement, got %+v", res)
+	}
+
+	// External connection (not lateral port)
+	webEvent := map[string]interface{}{
+		"event": map[string]interface{}{"action": "allow"},
+		"src":   map[string]interface{}{"ip": "10.0.1.10"},
+		"dst":   map[string]interface{}{"ip": "8.8.8.8", "port": 53},
+	}
+	resNeg, _ := engine.EvaluateRule("DET-007", webEvent, false)
+	if resNeg.Matched {
+		t.Errorf("expected DET-007 NOT to match non-lateral port")
+	}
+}
+
+func TestEngine_DET008_PrivilegeEscalation(t *testing.T) {
+	engine := NewEngine()
+
+	privEvent := map[string]interface{}{
+		"event": map[string]interface{}{"action": "sudo_elevation", "class": "privilege_activity"},
+		"user":  map[string]interface{}{"name": "root"},
+	}
+	res, err := engine.EvaluateRule("DET-008", privEvent, true)
+	if err != nil {
+		t.Fatalf("unexpected error evaluating DET-008: %v", err)
+	}
+	if !res.Matched || !res.Preserved {
+		t.Errorf("expected DET-008 to match privilege escalation, got %+v", res)
+	}
+
+	// Standard unprivileged user action
+	unprivEvent := map[string]interface{}{
+		"event": map[string]interface{}{"action": "read"},
+		"user":  map[string]interface{}{"name": "guest"},
+	}
+	resNeg, _ := engine.EvaluateRule("DET-008", unprivEvent, false)
+	if resNeg.Matched {
+		t.Errorf("expected DET-008 NOT to match unprivileged user read")
+	}
+}
+
+func TestEngine_DET009_DataExfiltration(t *testing.T) {
+	engine := NewEngine()
+
+	// High egress volume: 25 MB transfer
+	exfilEvent := map[string]interface{}{
+		"event":   map[string]interface{}{"class": "network"},
+		"network": map[string]interface{}{"bytes_out": 26214400},
+		"dst":     map[string]interface{}{"ip": "203.0.113.50"},
+	}
+	res, err := engine.EvaluateRule("DET-009", exfilEvent, true)
+	if err != nil {
+		t.Fatalf("unexpected error evaluating DET-009: %v", err)
+	}
+	if !res.Matched || !res.Preserved {
+		t.Errorf("expected DET-009 to match high egress volume, got %+v", res)
+	}
+
+	// Normal small HTTP response: 15 KB
+	normalEvent := map[string]interface{}{
+		"event":   map[string]interface{}{"class": "network"},
+		"network": map[string]interface{}{"bytes_out": 15360},
+		"dst":     map[string]interface{}{"ip": "203.0.113.50"},
+	}
+	resNeg, _ := engine.EvaluateRule("DET-009", normalEvent, false)
+	if resNeg.Matched {
+		t.Errorf("expected DET-009 NOT to match normal traffic volume")
+	}
+}
+
+func TestEngine_DET010_RansomwareFileModification(t *testing.T) {
+	engine := NewEngine()
+
+	ransomEvent := map[string]interface{}{
+		"event": map[string]interface{}{"class": "file", "action": "bulk_encrypt", "outcome": "success"},
+		"file":  map[string]interface{}{"path": "/data/confidential.docx.locked"},
+	}
+	res, err := engine.EvaluateRule("DET-010", ransomEvent, true)
+	if err != nil {
+		t.Fatalf("unexpected error evaluating DET-010: %v", err)
+	}
+	if !res.Matched || !res.Preserved {
+		t.Errorf("expected DET-010 to match ransomware file encryption, got %+v", res)
+	}
+}
+
+func TestEngine_CaseInsensitiveSemanticPreservation(t *testing.T) {
+	engine := NewEngine()
+
+	// Uppercase action and mixed case outcome
+	event := sampleNormalizedEvent("AUTHENTICATION", "FAILURE", "ADMIN", "10.0.0.1", "10.0.0.2")
+	res, err := engine.EvaluateRule("DET-001", event, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !res.Matched || !res.Preserved {
+		t.Errorf("expected case-insensitive matching on DET-001, got %+v", res)
+	}
+}
+
+func TestEngine_MultiStageAttackChain(t *testing.T) {
+	engine := NewEngine()
+
+	// Step 1: Initial failed auth
+	e1 := sampleNormalizedEvent("authentication", "failure", "attacker", "192.168.1.50", "10.0.0.5")
+	// Step 2: Lateral movement via RDP
+	e2 := map[string]interface{}{
+		"event": map[string]interface{}{"action": "allow", "outcome": "success"},
+		"src":   map[string]interface{}{"ip": "10.0.0.5", "port": 50123},
+		"dst":   map[string]interface{}{"ip": "10.0.0.10", "port": 3389},
+	}
+	// Step 3: Privilege escalation
+	e3 := map[string]interface{}{
+		"event": map[string]interface{}{"action": "sudo_elevation"},
+		"user":  map[string]interface{}{"name": "root"},
+	}
+	// Step 4: Data exfiltration
+	e4 := map[string]interface{}{
+		"event":   map[string]interface{}{"class": "network"},
+		"network": map[string]interface{}{"bytes_out": 50000000},
+		"dst":     map[string]interface{}{"ip": "198.51.100.22"},
+	}
+
+	r1, _ := engine.EvaluateRule("DET-001", e1, true)
+	r2, _ := engine.EvaluateRule("DET-007", e2, true)
+	r3, _ := engine.EvaluateRule("DET-008", e3, true)
+	r4, _ := engine.EvaluateRule("DET-009", e4, true)
+
+	calc := NewDPSCalculator()
+	report, err := calc.Calculate([]EvaluationResult{r1, r2, r3, r4})
+	if err != nil {
+		t.Fatalf("DPS calculation failed on attack chain: %v", err)
+	}
+	if report.DPS != 1.0 || !report.Certified {
+		t.Errorf("expected 100%% DPS across multi-stage attack chain, got %f (certified: %v)",
+			report.DPS, report.Certified)
+	}
+}
+
+func TestEngine_MissingIdentityAbstention(t *testing.T) {
+	engine := NewEngine()
+
+	// Auth failure event but completely missing user identity AND src IP
+	incompleteEvent := map[string]interface{}{
+		"event": map[string]interface{}{"action": "authentication", "outcome": "failure"},
+	}
+	res, err := engine.EvaluateRule("DET-001", incompleteEvent, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.Matched {
+		t.Errorf("expected rule to abstain from matching when identity is absent")
+	}
+}
+
+func TestDPS_PartialPreservationMetricScoring(t *testing.T) {
+	calc := NewDPSCalculator()
+
+	// 7 preserved, 3 unpreserved non-mandatory rules
+	results := []EvaluationResult{
+		{RuleID: "DET-001", IsMandatory: true, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-002", IsMandatory: true, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-003", IsMandatory: true, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-004", IsMandatory: true, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-005", IsMandatory: false, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-006", IsMandatory: false, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-007", IsMandatory: true, Matched: true, Expected: true, Preserved: true},
+		{RuleID: "DET-008", IsMandatory: false, Matched: false, Expected: true, Preserved: false},
+		{RuleID: "DET-009", IsMandatory: false, Matched: false, Expected: true, Preserved: false},
+		{RuleID: "DET-010", IsMandatory: false, Matched: false, Expected: true, Preserved: false},
+	}
+
+	report, err := calc.Calculate(results)
+	if err != nil {
+		t.Fatalf("DPS calculation error: %v", err)
+	}
+
+	expectedDPS := 0.70
+	if report.DPS != expectedDPS {
+		t.Errorf("expected DPS %f, got %f", expectedDPS, report.DPS)
+	}
+	if !report.MandatoryPassed {
+		t.Errorf("expected MandatoryPassed=true because all mandatory rules were preserved")
+	}
+}
