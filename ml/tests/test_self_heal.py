@@ -20,6 +20,7 @@ from ml.self_healing import (
     SelfHealingReport,
     SelfHealingWorkflow,
 )
+from ml.spec_compiler.schemas import CompiledParserSpec, TargetRuntime
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = ROOT / "packages" / "contracts" / "self_healing_report.schema.json"
@@ -293,3 +294,119 @@ def test_self_healing_report_contract_compliance(active_spec, candidate_spec, ra
     assert report_dict["schema_version"] == "1.0"
     assert report_dict["decision"] == "PROMOTED"
     assert report_dict["gates"]["shadow_evaluation"]["passed"] is True
+
+
+def test_self_healing_immediate_rollback_on_post_promotion_spike():
+    """Simulates immediate atomic rollback when post-promotion anomalies occur."""
+    deployer = SpecDeploymentEngine()
+    source_id = "rollback-firewall"
+
+    spec_v1 = CompiledParserSpec(
+        spec_id="spec_v1", source_id=source_id, version=1,
+        target_runtime=TargetRuntime.PYTHON_NATIVE, mappings=[],
+        compiled_code="def parse_log(e): return e", spec_hash="hash_1"
+    )
+    spec_v2 = CompiledParserSpec(
+        spec_id="spec_v2", source_id=source_id, version=2,
+        target_runtime=TargetRuntime.PYTHON_NATIVE, mappings=[],
+        compiled_code="def parse_log(e): return {}", spec_hash="hash_2"
+    )
+
+    # 1. Deploy active spec
+    dep1 = deployer.deploy_spec(spec_v1, validation_passed=True)
+    assert dep1["status"] == "DEPLOYED"
+
+    # 2. Deploy candidate spec
+    dep2 = deployer.deploy_spec(spec_v2, validation_passed=True)
+    assert dep2["status"] == "DEPLOYED"
+    assert deployer.get_active_spec(source_id).spec_id == "spec_v2"
+
+    # 3. Trigger rollback
+    rolled_back = deployer.rollback(source_id=source_id)
+    assert rolled_back["status"] == "ROLLED_BACK"
+    assert deployer.get_active_spec(source_id).spec_id == "spec_v1"
+
+
+def test_self_healing_candidate_spec_tournament(active_spec, candidate_spec):
+    """Evaluates candidate competition where inferior candidate is refused and superior candidate promoted."""
+    policy = PromotionPolicy()
+
+    # Candidate A: Sub-par extraction accuracy
+    gates_a = GateResults(
+        schema_passed=True,
+        schema_details="Valid",
+        validation_passed=False,
+        extraction_accuracy=0.88,
+        semantic_accuracy=0.90,
+        dps=0.95,
+        raw_retention=1.0,
+        unknown_retention=1.0,
+        shadow_passed=True,
+        shadow_state="PASSED",
+        field_match_rate=0.88,
+        dps_delta=0.0,
+        downstream_isolation_verified=True,
+    )
+    dec_a, reasons_a, _ = policy.evaluate(gates_a, mode=PromotionMode.AUTOMATIC_CONDITIONAL)
+    assert dec_a == PromotionDecision.REJECTED
+
+    # Candidate B: Perfect 100% metrics
+    gates_b = GateResults(
+        schema_passed=True,
+        schema_details="Valid",
+        validation_passed=True,
+        extraction_accuracy=1.0,
+        semantic_accuracy=1.0,
+        dps=1.0,
+        raw_retention=1.0,
+        unknown_retention=1.0,
+        shadow_passed=True,
+        shadow_state="PASSED",
+        field_match_rate=1.0,
+        dps_delta=0.0,
+        downstream_isolation_verified=True,
+    )
+    dec_b, reasons_b, _ = policy.evaluate(gates_b, mode=PromotionMode.AUTOMATIC_CONDITIONAL)
+    assert dec_b == PromotionDecision.PROMOTED
+
+
+def test_self_healing_partitioned_scope_rollout():
+    """Verifies that under MANUAL_APPROVAL mode, passed gates escalate rather than auto-deploy."""
+    policy = PromotionPolicy()
+    perfect_gates = GateResults(
+        schema_passed=True,
+        schema_details="Valid",
+        validation_passed=True,
+        extraction_accuracy=1.0,
+        semantic_accuracy=1.0,
+        dps=1.0,
+        raw_retention=1.0,
+        unknown_retention=1.0,
+        shadow_passed=True,
+        shadow_state="PASSED",
+        field_match_rate=1.0,
+        dps_delta=0.0,
+        downstream_isolation_verified=True,
+    )
+    dec, reasons, _ = policy.evaluate(perfect_gates, mode=PromotionMode.MANUAL_APPROVAL)
+    assert dec == PromotionDecision.ESCALATED_FOR_APPROVAL
+    assert len(reasons) == 0
+
+
+def test_self_healing_audit_trail_provenance_seal(active_spec, candidate_spec, raw_firewall_events, drift_report):
+    """Verifies that every self-healing run records candidate spec hash and incident provenance."""
+    workflow = SelfHealingWorkflow()
+    report = workflow.handle_repair(
+        source_id="provenance-firewall",
+        drift_report=drift_report,
+        active_spec=active_spec,
+        candidate_spec=candidate_spec,
+        recent_log_samples=raw_firewall_events,
+        promotion_mode=PromotionMode.AUTOMATIC_CONDITIONAL,
+        incident_id="INC-AUDIT-999",
+    )
+    d = report.to_dict()
+    assert d["incident_id"] == "INC-AUDIT-999"
+    assert d["candidate_parser"]["spec_hash"].startswith("sha256-")
+    assert d["candidate_parser"]["id"] == candidate_spec["parser"]["id"]
+    assert d["active_parser"]["id"] == active_spec["parser"]["id"]

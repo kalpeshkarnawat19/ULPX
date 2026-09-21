@@ -150,3 +150,60 @@ func TestLineage_BuildFieldLineage_ScopeGuard_NoFabrication(t *testing.T) {
 		t.Fatalf("scope guard violation: expected error when source field is missing from raw bytes, got nil")
 	}
 }
+
+func TestLineage_MultiByteRuneOffsetIntegrity(t *testing.T) {
+	// Raw string with multi-byte Japanese runes and emojis
+	raw := []byte("msg=認証成功 user=田中太郎 token=🔑12345 action=permit")
+	token := "田中太郎" // 4 runes, 12 UTF-8 bytes
+
+	start, end, found := FindRawByteOffset(raw, token)
+	if !found {
+		t.Fatalf("expected multi-byte token %q to be found", token)
+	}
+	extracted := string(raw[start:end])
+	if extracted != token {
+		t.Errorf("expected extracted byte span %q, got %q", token, extracted)
+	}
+	if end-start != len([]byte(token)) {
+		t.Errorf("expected byte length %d, got %d", len([]byte(token)), end-start)
+	}
+}
+
+func TestLineage_DuplicateSubstringDisambiguation(t *testing.T) {
+	raw := []byte("relay=10.0.0.1 src=10.0.0.1 dst=10.0.0.2")
+	token := "10.0.0.1"
+
+	start, end, found := FindRawByteOffset(raw, token)
+	if !found {
+		t.Fatalf("expected token %q to be found", token)
+	}
+	if string(raw[start:end]) != token {
+		t.Errorf("expected token match %q, got %q", token, string(raw[start:end]))
+	}
+	// Verify first occurrence is at index 6 ("relay=10.0.0.1")
+	if start != 6 {
+		t.Errorf("expected first occurrence at byte offset 6, got %d", start)
+	}
+}
+
+func TestLineage_EscapedDelimitersOffsetIntegrity(t *testing.T) {
+	raw := []byte("cs1=test\\|pipe cs2=\"quoted\\\"val\" action=allow")
+	token := "test\\|pipe"
+
+	start, end, found := FindRawByteOffset(raw, token)
+	if !found {
+		t.Fatalf("expected escaped token %q to be found", token)
+	}
+	if string(raw[start:end]) != token {
+		t.Errorf("expected byte span %q, got %q", token, string(raw[start:end]))
+	}
+}
+
+func TestLineage_ZeroLengthTokenRefusal(t *testing.T) {
+	raw := []byte("src=10.0.0.1 dst=10.0.0.2")
+
+	start, end, found := FindRawByteOffset(raw, "")
+	if found || start != -1 || end != -1 {
+		t.Errorf("expected not found for empty token, got (%d, %d, %v)", start, end, found)
+	}
+}

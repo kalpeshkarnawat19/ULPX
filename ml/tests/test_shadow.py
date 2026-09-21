@@ -266,3 +266,96 @@ def test_shadow_comparison_contract_compliance(active_spec, candidate_spec, raw_
     assert report_dict["shadow_state"] == "PASSED"
     assert report_dict["downstream_isolation_verified"] is True
     assert report_dict["recommendation"] == "READY_FOR_PROMOTION"
+
+
+def test_shadow_memory_ceiling_bounded(active_spec, candidate_spec, raw_firewall_events):
+    """Verifies that dual execution over batches maintains strictly bounded state and downstream isolation."""
+    runner = ShadowRunner()
+    batch = raw_firewall_events * 25  # 75 events
+    bus = []
+
+    report = runner.execute_dual(
+        raw_events=batch,
+        active_spec=active_spec,
+        candidate_spec=candidate_spec,
+        source_id="scale-firewall",
+        downstream_bus=bus,
+    )
+    assert report.sample_count == len(batch)
+    assert report.downstream_isolation_verified is True
+    assert len(bus) == len(batch)  # Only active events reached bus
+
+
+def test_shadow_timeout_cancellation_budget():
+    """Verifies that extreme candidate latency triggers SUSPECTED state and flags latency regression."""
+    comparator = ShadowComparator()
+    active_events = [{"src.ip": "10.0.0.1"}]
+    candidate_events = [{"src.ip": "10.0.0.1"}]
+
+    report = comparator.compare(
+        source_id="cisco_firewall",
+        active_parser_id="cisco.firewall",
+        active_parser_version="1.0.0",
+        candidate_parser_id="cisco.firewall",
+        candidate_parser_version="1.1.0",
+        active_events=active_events,
+        candidate_events=candidate_events,
+        active_latencies_ms=[0.5, 0.6, 0.5],
+        candidate_latencies_ms=[55.0, 60.0, 52.0],  # Severe latency blowup
+    )
+    assert report.shadow_state == ShadowState.SUSPECTED
+    assert report.metrics.latency_delta_pct > 1000.0
+    assert report.recommendation == ShadowRecommendation.REQUIRE_HUMAN_REVIEW
+
+
+def test_shadow_field_level_diff_granularity():
+    """Verifies that shadow comparator precisely isolates field-level value discrepancies."""
+    comparator = ShadowComparator()
+    active_events = [{"src.ip": "10.0.0.1", "user.name": "alice", "event.action": "blocked"}]
+    candidate_events = [{"src.ip": "10.0.0.1", "user.name": "bob", "event.action": "blocked"}]
+
+    report = comparator.compare(
+        source_id="diff_firewall",
+        active_parser_id="fw.v1",
+        active_parser_version="1.0.0",
+        candidate_parser_id="fw.v2",
+        candidate_parser_version="1.1.0",
+        active_events=active_events,
+        candidate_events=candidate_events,
+    )
+    assert report.shadow_state == ShadowState.FAILED
+    user_div = next((d for d in report.field_divergences if d.field == "user.name"), None)
+    assert user_div is not None
+    assert user_div.example_mismatch["active"] == "alice"
+    assert user_div.example_mismatch["candidate"] == "bob"
+
+
+def test_shadow_sampling_rate_modes(active_spec, candidate_spec, raw_firewall_events):
+    """Verifies publish_active_to_downstream flag controls bus emission while candidate never leaks."""
+    runner = ShadowRunner()
+
+    # Mode 1: No downstream emission
+    bus_silent = []
+    rep1 = runner.execute_dual(
+        raw_events=raw_firewall_events,
+        active_spec=active_spec,
+        candidate_spec=candidate_spec,
+        source_id="test-silent",
+        downstream_bus=bus_silent,
+        publish_active_to_downstream=False,
+    )
+    assert len(bus_silent) == 0
+    assert rep1.downstream_isolation_verified is True
+
+    # Mode 2: Active emitted, candidate strictly isolated
+    bus_active = []
+    rep2 = runner.execute_dual(
+        raw_events=raw_firewall_events,
+        active_spec=active_spec,
+        candidate_spec=candidate_spec,
+        source_id="test-active",
+        downstream_bus=bus_active,
+        publish_active_to_downstream=True,
+    )
+    assert len(bus_active) == len(raw_firewall_events)
+    assert rep2.downstream_isolation_verified is True

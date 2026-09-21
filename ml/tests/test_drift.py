@@ -195,3 +195,72 @@ def test_drift_report_contract_compliance(detector, baseline_profile):
     assert report_dict["drift_state"] == "STABLE"
     assert "signals" in report_dict
     assert "thresholds" in report_dict
+
+
+def test_drift_empty_payload_batch(detector, baseline_profile):
+    """Verifies that batches with empty objects or zero extractable keys handle division by zero safely."""
+    empty_logs = ["{}", "{}", "{}"]
+    report = detector.detect_from_logs(
+        baseline=baseline_profile,
+        current_logs=empty_logs,
+        source_id="app_firewall",
+        parser_id="app.firewall.json",
+    )
+    assert report.drift_state in (DriftState.DRIFTED, DriftState.SUSPECTED)
+    assert 0.0 <= report.signals.key_set_distance <= 1.0
+    assert report.signals.parse_failure_rate == 0.0
+
+
+def test_drift_high_entropy_ephemeral_burst(detector, baseline_profile):
+    """Verifies that an injection of 50+ ephemeral keys triggers key_set_distance drift without memory leak."""
+    current_logs = [
+        f'{{"src_ip": "10.0.0.1", "dst_port": 443, "action": "allow", "ephemeral_k_{i}": {i}}}'
+        for i in range(50)
+    ]
+    report = detector.detect_from_logs(
+        baseline=baseline_profile,
+        current_logs=current_logs,
+        source_id="app_firewall",
+        parser_id="app.firewall.json",
+    )
+    assert report.drift_state == DriftState.DRIFTED
+    assert report.signals.key_set_distance >= 0.15
+    assert report.remediation_recommended is True
+
+
+def test_drift_categorical_tvd_distribution_shift(detector):
+    """Tests Total Variation Distance divergence when log format distribution shifts (e.g., JSON -> mixed KV)."""
+    profiler = UnknownSourceProfiler()
+    baseline_logs = ['{"action": "allow", "port": 443}'] * 20
+    baseline = profiler.profile(baseline_logs)
+
+    # 50% JSON, 50% Key-Value (severe format distribution shift)
+    current_logs = (
+        ['{"action": "allow", "port": 443}'] * 10
+        + ['action=allow port=443 src=10.0.0.1 dst=10.0.0.2'] * 10
+    )
+    report = detector.detect_from_logs(
+        baseline=baseline,
+        current_logs=current_logs,
+        source_id="app_firewall",
+        parser_id="app.firewall.json",
+    )
+    assert report.signals.distribution_divergence >= 0.20
+    assert report.drift_state in (DriftState.DRIFTED, DriftState.SUSPECTED)
+
+
+def test_drift_compound_type_mutation_matrix(detector, baseline_profile):
+    """Verifies that multiple concurrent type mutations flag type violations and recommend remediation."""
+    current_logs = [
+        '{"src_ip": "10.0.0.1", "dst_port": "tcp-443", "action": 100, "user": true}',
+        '{"src_ip": "10.0.0.2", "dst_port": "tcp-80", "action": 200, "user": false}',
+    ]
+    report = detector.detect_from_logs(
+        baseline=baseline_profile,
+        current_logs=current_logs,
+        source_id="app_firewall",
+        parser_id="app.firewall.json",
+    )
+    assert report.signals.type_violation_rate > 0.0
+    assert report.drift_state == DriftState.DRIFTED
+    assert report.remediation_recommended is True

@@ -187,3 +187,108 @@ func TestLineage_ScopeGuard_RejectsNilAndFabrications(t *testing.T) {
 		t.Fatalf("expected error for invalid lineage record, got nil")
 	}
 }
+
+func TestLineage_SubSliceReassemblyProof(t *testing.T) {
+	runtime := parser_runtime.NewParserRuntime()
+	raw := "src=192.168.1.10 dst=10.0.0.1 action=blocked user=admin"
+	specJSON := []byte(`{
+		"dsl_version": "1.0",
+		"parser": {
+			"id": "test.kv",
+			"version": "1.0.0"
+		},
+		"match": {"format": "key_value"},
+		"body_parser": {"type": "key_value", "pair_separator": " ", "key_value_separator": "="},
+		"fields": {
+			"src": {"type": "ip", "map_to": "src.ip", "transformations": ["trim", "ip"]},
+			"dst": {"type": "ip", "map_to": "dst.ip", "transformations": ["trim", "ip"]},
+			"action": {"type": "string", "map_to": "event.action", "transformations": ["trim"]}
+		},
+		"unknown_fields": {"policy": "preserve"},
+		"raw": {"preserve": true}
+	}`)
+	spec, err := parser_runtime.LoadParserSpecJSON(specJSON)
+	if err != nil {
+		t.Fatalf("failed loading spec: %v", err)
+	}
+
+	res, err := runtime.Parse([]byte(raw), spec)
+	if err != nil {
+		t.Fatalf("parsing failed: %v", err)
+	}
+
+	normalizer := NewNormalizer()
+	lineages, err := normalizer.ExtractLineage(res)
+	if err != nil {
+		t.Fatalf("extract lineage failed: %v", err)
+	}
+
+	// Verify all extracted fields exist verbatim in raw bytes without modification
+	for _, lin := range lineages {
+		if !strings.Contains(raw, lin.RawLocator.Value) {
+			t.Errorf("field %s raw locator %s not found in raw payload %s", lin.NormalizedPath, lin.RawLocator.Value, raw)
+		}
+	}
+}
+
+func TestLineage_DeterministicSliceIdentity(t *testing.T) {
+	normalizer := NewNormalizer()
+	runtime := parser_runtime.NewParserRuntime()
+	raw := "src=10.0.0.5 dst=10.0.0.6 action=allow"
+	specJSON := []byte(`{
+		"dsl_version": "1.0",
+		"parser": {
+			"id": "test.det",
+			"version": "1.0.0"
+		},
+		"match": {"format": "key_value"},
+		"body_parser": {"type": "key_value", "pair_separator": " ", "key_value_separator": "="},
+		"fields": {
+			"src": {"type": "ip", "map_to": "src.ip", "transformations": ["trim", "ip"]},
+			"dst": {"type": "ip", "map_to": "dst.ip", "transformations": ["trim", "ip"]}
+		},
+		"unknown_fields": {"policy": "preserve"},
+		"raw": {"preserve": true}
+	}`)
+	spec, err := parser_runtime.LoadParserSpecJSON(specJSON)
+	if err != nil {
+		t.Fatalf("failed loading spec: %v", err)
+	}
+
+	res1, err := runtime.Parse([]byte(raw), spec)
+	if err != nil {
+		t.Fatalf("failed parsing res1: %v", err)
+	}
+	lin1, err := normalizer.ExtractLineage(res1)
+	if err != nil {
+		t.Fatalf("failed extracting lin1: %v", err)
+	}
+
+	res2, err := runtime.Parse([]byte(raw), spec)
+	if err != nil {
+		t.Fatalf("failed parsing res2: %v", err)
+	}
+	lin2, err := normalizer.ExtractLineage(res2)
+	if err != nil {
+		t.Fatalf("failed extracting lin2: %v", err)
+	}
+
+	map1 := make(map[string]parser_runtime.FieldLineage)
+	for _, l := range lin1 {
+		map1[l.NormalizedPath] = l
+	}
+	map2 := make(map[string]parser_runtime.FieldLineage)
+	for _, l := range lin2 {
+		map2[l.NormalizedPath] = l
+	}
+
+	if len(map1) != len(map2) {
+		t.Fatalf("lineage count mismatch: %d != %d", len(map1), len(map2))
+	}
+	for k, v1 := range map1 {
+		v2, ok := map2[k]
+		if !ok || v1.RawLocator.Value != v2.RawLocator.Value {
+			t.Errorf("lineage mismatch for %s: %+v vs %+v", k, v1, v2)
+		}
+	}
+}

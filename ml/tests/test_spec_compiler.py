@@ -71,3 +71,33 @@ def test_compiler_ulpf_parser_spec():
     assert spec["fields"]["src_ip"]["type"] == "ip"
     assert spec["fields"]["dst_port"]["map_to"] == "dst.port"
     assert spec["fields"]["dst_port"]["type"] == "integer"
+
+
+def test_spec_compiler_deterministic_hash():
+    """Verifies that identical input candidate packages yield bit-for-bit identical hashes and spec_ids."""
+    compiler = SpecCompilerEngine()
+    pkg = {
+        "source_id": "deterministic_syslog",
+        "detected_format": "syslog",
+        "deterministic_mappings": [
+            {"raw_field": "src", "canonical_field": "src.ip"},
+            {"raw_field": "dst", "canonical_field": "dst.ip"},
+        ],
+    }
+    comp1 = compiler.compile_spec(pkg, target_runtime=TargetRuntime.ULPF_PARSER_SPEC)
+    comp2 = compiler.compile_spec(pkg, target_runtime=TargetRuntime.ULPF_PARSER_SPEC)
+    assert comp1.spec_hash == comp2.spec_hash
+    assert comp1.spec_id == comp2.spec_id
+    assert comp1.compiled_code == comp2.compiled_code
+
+
+def test_spec_compiler_empty_mappings_safe_fallback():
+    """Verifies that an empty package compiles with rule-compliant defaults without raising exceptions."""
+    import json
+    compiler = SpecCompilerEngine()
+    pkg = {"source_id": "empty_stream", "detected_format": "json"}
+    comp = compiler.compile_spec(pkg, target_runtime=TargetRuntime.ULPF_PARSER_SPEC)
+    spec = json.loads(comp.compiled_code)
+    assert spec["unknown_fields"]["policy"] == "preserve"
+    assert spec["raw"]["preserve"] is True
+    assert "raw_message" in spec["fields"]

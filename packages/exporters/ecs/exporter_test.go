@@ -201,3 +201,90 @@ func TestECSExporter_RejectsNilAndInvalid(t *testing.T) {
 		t.Errorf("expected error exporting event with invalid outcome")
 	}
 }
+
+func TestECSExporter_DeepExtensionPassthrough(t *testing.T) {
+	exp := NewExporter()
+	event := sampleNormalizedEvent()
+	event.Extensions = map[string]interface{}{
+		"custom_tenant":       "acme_corp",
+		"internal_risk_score": 85,
+	}
+
+	ecsEvent, err := exp.Export(event)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if ecsEvent.Labels == nil {
+		t.Fatalf("expected labels to be populated from extensions")
+	}
+	if val, ok := ecsEvent.Labels["custom_tenant"]; !ok || val != "acme_corp" {
+		t.Errorf("expected labels[custom_tenant] = 'acme_corp', got %v", val)
+	}
+	if val, ok := ecsEvent.Labels["internal_risk_score"]; !ok || val != 85 {
+		t.Errorf("expected labels[internal_risk_score] = 85, got %v", val)
+	}
+}
+
+func TestECSExporter_CompoundMultiFamilyEvent(t *testing.T) {
+	exp := NewExporter()
+	event := sampleNormalizedEvent()
+
+	ecsEvent, err := exp.Export(event)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if ecsEvent.Source == nil || ecsEvent.Destination == nil {
+		t.Errorf("expected Source and Destination endpoints present")
+	}
+	if ecsEvent.Network == nil || ecsEvent.Network.Transport != "tcp" {
+		t.Errorf("expected Network.Transport = 'tcp', got %v", ecsEvent.Network)
+	}
+	if ecsEvent.User == nil || ecsEvent.User.Name != "alice" {
+		t.Errorf("expected User.Name = 'alice'")
+	}
+	if ecsEvent.Host == nil || ecsEvent.Host.Name != "alice-laptop" {
+		t.Errorf("expected Host.Name = 'alice-laptop'")
+	}
+	if ecsEvent.HTTP == nil || ecsEvent.HTTP.Request == nil || ecsEvent.HTTP.Request.Method != "POST" {
+		t.Errorf("expected HTTP.Request.Method = 'POST'")
+	}
+	if ecsEvent.DNS == nil || ecsEvent.DNS.Question == nil || ecsEvent.DNS.Question.Name != "corp.internal" {
+		t.Errorf("expected DNS.Question.Name = 'corp.internal'")
+	}
+}
+
+func TestECSExporter_MicrosecondTimestampPrecision(t *testing.T) {
+	exp := NewExporter()
+	event := sampleNormalizedEvent()
+	event.Event.Time = "2026-09-21T17:45:00.123456Z"
+
+	ecsEvent, err := exp.Export(event)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if ecsEvent.Timestamp != "2026-09-21T17:45:00.123456Z" {
+		t.Errorf("expected microsecond timestamp preserved, got: %s", ecsEvent.Timestamp)
+	}
+}
+
+func TestECSExporter_IPv6AndCIDRProjections(t *testing.T) {
+	exp := NewExporter()
+	event := sampleNormalizedEvent()
+	event.Src.IP = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+	event.Dst.IP = "fe80::1"
+
+	ecsEvent, err := exp.Export(event)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if ecsEvent.Source.IP != "2001:0db8:85a3:0000:0000:8a2e:0370:7334" {
+		t.Errorf("expected source.ip preserved, got: %s", ecsEvent.Source.IP)
+	}
+	if ecsEvent.Destination.IP != "fe80::1" {
+		t.Errorf("expected destination.ip preserved, got: %s", ecsEvent.Destination.IP)
+	}
+}

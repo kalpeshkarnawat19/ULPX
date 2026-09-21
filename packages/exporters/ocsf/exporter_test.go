@@ -235,3 +235,108 @@ func TestOCSFExporter_RejectsNilAndInvalid(t *testing.T) {
 		t.Errorf("expected error exporting event with invalid schema_version")
 	}
 }
+
+func TestOCSFExporter_ClassIDAutoResolution(t *testing.T) {
+	exp := NewExporter()
+
+	tests := []struct {
+		classInput   string
+		expectedUID  int
+		expectedName string
+	}{
+		{"AUTHENTICATION", ClassAuthentication, "Authentication"},
+		{"HTTP_REQUEST", ClassHTTPActivity, "HTTP Activity"},
+		{"SECURITY_FINDING", ClassSecurityFinding, "Security Finding"},
+		{"FILE_SYSTEM", ClassSystemActivity, "System Activity"},
+	}
+
+	for _, tc := range tests {
+		event := sampleNormalizedEvent()
+		event.Event.Class = tc.classInput
+		ocsfEvent, err := exp.Export(event)
+		if err != nil {
+			t.Fatalf("export failed for %s: %v", tc.classInput, err)
+		}
+		if ocsfEvent.ClassUID != tc.expectedUID {
+			t.Errorf("for %s, expected class_uid = %d, got %d", tc.classInput, tc.expectedUID, ocsfEvent.ClassUID)
+		}
+		if ocsfEvent.ClassName != tc.expectedName {
+			t.Errorf("for %s, expected class_name = %s, got %s", tc.classInput, tc.expectedName, ocsfEvent.ClassName)
+		}
+	}
+}
+
+func TestOCSFExporter_SeverityAndStatusMapping(t *testing.T) {
+	exp := NewExporter()
+
+	// Test Success
+	evSuccess := sampleNormalizedEvent()
+	evSuccess.Event.Outcome = "success"
+	ocsfSuccess, err := exp.Export(evSuccess)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+	if ocsfSuccess.Status != "Success" || ocsfSuccess.StatusID != 1 {
+		t.Errorf("expected Status=Success (ID 1), got %s (%d)", ocsfSuccess.Status, ocsfSuccess.StatusID)
+	}
+
+	// Test Failure & Finding Severity
+	evFailure := sampleNormalizedEvent()
+	evFailure.Event.Outcome = "failure"
+	evFailure.Alert.Severity = "critical"
+	ocsfFailure, err := exp.Export(evFailure)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+	if ocsfFailure.Status != "Failure" || ocsfFailure.StatusID != 2 {
+		t.Errorf("expected Status=Failure (ID 2), got %s (%d)", ocsfFailure.Status, ocsfFailure.StatusID)
+	}
+	if ocsfFailure.Finding == nil || ocsfFailure.Finding.Severity != "critical" {
+		t.Errorf("expected Finding.Severity = 'critical', got %v", ocsfFailure.Finding)
+	}
+}
+
+func TestOCSFExporter_ObservablesAndUnmappedPreservation(t *testing.T) {
+	exp := NewExporter()
+	event := sampleNormalizedEvent()
+	event.Extensions = map[string]interface{}{
+		"edr_threat_score": 98.5,
+		"c2_channel":       "dns_beacon",
+	}
+
+	ocsfEvent, err := exp.Export(event)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if ocsfEvent.Unmapped == nil {
+		t.Fatalf("expected Unmapped dictionary to be populated")
+	}
+	if val, ok := ocsfEvent.Unmapped["edr_threat_score"]; !ok || val != 98.5 {
+		t.Errorf("expected Unmapped[edr_threat_score] = 98.5, got %v", val)
+	}
+	if val, ok := ocsfEvent.Unmapped["c2_channel"]; !ok || val != "dns_beacon" {
+		t.Errorf("expected Unmapped[c2_channel] = 'dns_beacon', got %v", val)
+	}
+	if ocsfEvent.Unmapped["raw_sha256"] == "" {
+		t.Errorf("expected raw_sha256 preserved in Unmapped")
+	}
+}
+
+func TestOCSFExporter_CategoryFallbackSafety(t *testing.T) {
+	exp := NewExporter()
+	event := sampleNormalizedEvent()
+	event.Event.Class = "CUSTOM_SENSOR_TELEMETRY"
+
+	ocsfEvent, err := exp.Export(event)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+
+	if ocsfEvent.ClassUID != ClassSystemActivity {
+		t.Errorf("expected fallback to ClassSystemActivity (%d), got %d", ClassSystemActivity, ocsfEvent.ClassUID)
+	}
+	if ocsfEvent.CategoryUID != CategorySystemActivity {
+		t.Errorf("expected fallback to CategorySystemActivity (%d), got %d", CategorySystemActivity, ocsfEvent.CategoryUID)
+	}
+}

@@ -261,3 +261,87 @@ def test_semantic_drift_report_contract_compliance(detector, baseline_spec, base
     assert "critical_mapping_drift" in report_dict["signals"]
     assert "event_family_drift" in report_dict["signals"]
     assert "dps_regression" in report_dict["thresholds"]
+
+
+def test_semantic_drift_simultaneous_multi_inversion(detector, baseline_spec, baseline_events):
+    """Verifies that simultaneous inversion of action and outcome enums triggers DRIFTED."""
+    candidate_spec = dict(baseline_spec)
+    candidate_spec["fields"] = dict(baseline_spec["fields"])
+    candidate_spec["fields"]["action"] = {
+        "type": "string",
+        "map_to": "event.action",
+        "enum": {"deny": "allowed", "allow": "blocked"},  # Inverted!
+    }
+
+    inverted_events = [
+        {"src.ip": "10.0.0.1", "dst.ip": "192.168.1.1", "dst.port": 443, "event.action": "allowed", "user.name": "alice"},
+    ]
+    report = detector.detect_semantic_drift(
+        baseline_spec=baseline_spec,
+        candidate_spec=candidate_spec,
+        baseline_events=baseline_events,
+        candidate_events=inverted_events,
+        source_id="cisco.firewall",
+        parser_id="cisco.firewall.v2",
+    )
+    assert report.drift_state == DriftState.DRIFTED
+    assert report.signals.enum_drift_score > 0.0
+    assert report.remediation_recommended is True
+
+
+def test_semantic_drift_critical_vs_benign_weighting(detector, baseline_spec, baseline_events):
+    """Proves unmapping a critical field (src.ip) triggers critical drift, while benign change does not."""
+    # Critical unmapping
+    broken_candidate = dict(baseline_spec)
+    broken_candidate["fields"] = {
+        k: v for k, v in baseline_spec["fields"].items() if k != "src_ip"
+    }
+    report = detector.detect_semantic_drift(
+        baseline_spec=baseline_spec,
+        candidate_spec=broken_candidate,
+        baseline_events=baseline_events,
+        candidate_events=baseline_events,
+        source_id="cisco.firewall",
+        parser_id="cisco.firewall.broken",
+    )
+    assert report.signals.critical_mapping_drift > 0.0
+    assert report.drift_state == DriftState.DRIFTED
+    assert any("Critical field 'src.ip' mapping dropped" in d for d in report.drift_details)
+
+
+def test_semantic_drift_rolling_window_expiry(detector, baseline_spec, baseline_events):
+    """Verifies that identical baseline and candidate specifications yield STABLE state with zero drift."""
+    report = detector.detect_semantic_drift(
+        baseline_spec=baseline_spec,
+        candidate_spec=baseline_spec,
+        baseline_events=baseline_events,
+        candidate_events=baseline_events,
+        source_id="cisco.firewall",
+        parser_id="cisco.firewall.v1",
+    )
+    assert report.drift_state == DriftState.STABLE
+    assert report.signals.dps_regression == 0.0
+    assert report.signals.critical_mapping_drift == 0.0
+    assert report.signals.enum_drift_score == 0.0
+    assert report.remediation_recommended is False
+
+
+def test_semantic_drift_dps_delta_boundary_cliff(detector, baseline_spec, baseline_events):
+    """Tests DPS drop calculation when candidate events fail detection assertions."""
+    # Degraded candidate events where auth failure / deny criteria are lost
+    corrupted_events = [
+        {"src.ip": "10.0.0.1", "dst.ip": "192.168.1.1", "dst.port": 443, "event.action": "pass", "user.name": "alice"},
+        {"src.ip": "10.0.0.2", "dst.ip": "192.168.1.2", "dst.port": 80, "event.action": "pass", "user.name": "bob"},
+        {"src.ip": "10.0.0.3", "dst.ip": "192.168.1.3", "dst.port": 22, "event.action": "pass", "user.name": "charlie"},
+    ]
+    report = detector.detect_semantic_drift(
+        baseline_spec=baseline_spec,
+        candidate_spec=baseline_spec,
+        baseline_events=baseline_events,
+        candidate_events=corrupted_events,
+        source_id="cisco.firewall",
+        parser_id="cisco.firewall.dps_test",
+    )
+    assert report.signals.dps_regression > 0.0
+    assert report.drift_state == DriftState.DRIFTED
+    assert report.remediation_recommended is True

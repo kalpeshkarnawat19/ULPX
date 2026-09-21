@@ -91,3 +91,73 @@ def test_malformed_json_provider_raises_error():
     assistant = LocalAIAssistant(provider=MalformedJSONProvider())
     with pytest.raises(ValueError, match="LLM response is not valid JSON."):
         assistant.propose_mappings("cand_err", "kv", [], "sample log")
+
+
+def test_ai_assist_refuses_unwhitelisted_transform_operations():
+    """Verifies that anti-hallucination guard strips non-canonical fields and routes them to unmapped."""
+    assistant = LocalAIAssistant()
+    candidate = {
+        "candidate_id": "cand_guard",
+        "source_format": "cef",
+        "mapped_fields": [
+            {"raw_field": "src", "canonical_field": "src.ip", "confidence": 0.95, "reasoning": "Valid"},
+            {"raw_field": "cmd", "canonical_field": "unwhitelisted.system.cmd", "confidence": 0.99, "reasoning": "Hallucinated"},
+            {"raw_field": "tactic", "canonical_field": "attack.tactic", "confidence": 0.85, "reasoning": "Hallucinated"},
+        ],
+        "unmapped_fields": [],
+    }
+    filtered = assistant.filter_hallucinated_fields(candidate)
+    assert len(filtered["mapped_fields"]) == 1
+    assert filtered["mapped_fields"][0]["canonical_field"] == "src.ip"
+    assert "cmd" in filtered["unmapped_fields"]
+    assert "tactic" in filtered["unmapped_fields"]
+
+
+def test_ai_assist_empty_unmapped_fields():
+    """Verifies handling of empty unmapped field list without exceptions."""
+    assistant = LocalAIAssistant(provider=MockLLMProvider())
+    spec = assistant.propose_mappings(
+        candidate_id="cand_empty",
+        source_format="json",
+        unmapped_fields=[],
+        log_sample="{}",
+    )
+    assert spec["candidate_id"] == "cand_empty"
+    assert len(spec["mapped_fields"]) == 0
+    assert len(spec["unmapped_fields"]) == 0
+
+
+def test_ai_assist_confidence_boundary_validation():
+    """Verifies that candidate validator rejects non-numeric confidence scores."""
+    assistant = LocalAIAssistant()
+
+    valid_candidate = {
+        "candidate_id": "cand_valid",
+        "source_format": "json",
+        "mapped_fields": [
+            {"raw_field": "src", "canonical_field": "src.ip", "confidence": 0.0, "reasoning": "Valid"},
+            {"raw_field": "dst", "canonical_field": "dest.ip", "confidence": 1.0, "reasoning": "Valid"},
+        ],
+        "unmapped_fields": [],
+    }
+    assert assistant.validate_candidate_structure(valid_candidate) is True
+
+    invalid_candidate = {
+        "candidate_id": "cand_inv",
+        "source_format": "json",
+        "mapped_fields": [
+            {"raw_field": "src", "canonical_field": "src.ip", "confidence": "high", "reasoning": "Invalid type"},
+        ],
+        "unmapped_fields": [],
+    }
+    assert assistant.validate_candidate_structure(invalid_candidate) is False
+
+
+def test_ai_assist_prompt_sanitization_complex():
+    """Verifies that complex adversarial injection vectors are neutralized by the sanitizer."""
+    assistant = LocalAIAssistant()
+    payload = 'attack\x00_vec " --DROP TABLE -- \\ \x00 root'
+    sanitized = assistant.sanitize_untrusted_input(payload)
+    assert "\x00" not in sanitized
+    assert '\\"' in sanitized
+    assert "\\\\" in sanitized
