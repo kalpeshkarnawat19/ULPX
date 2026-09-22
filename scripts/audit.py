@@ -472,10 +472,15 @@ def run_test_suite() -> int:
 
     # Health verdict relies strictly on zero hard failures
     if failed_count == 0:
+        if skipped_count > 0:
+            skip_line = f"  • [bold yellow]ℹ[/bold yellow] [bold white]{skipped_count} / {total_components}[/bold white] Consumer Toolchain Skips ([dim]Go/CMake skipped — Expected on consumer nodes[/dim])\n"
+        else:
+            skip_line = f"  • [bold green]✔[/bold green] [bold white]0 / {total_components}[/bold white] Toolchain Skips ([dim]Full Developer Environment Detected[/dim])\n"
+
         summary_markup = (
             f"[bold green]✔ MASTER SYSTEM HEALTH: OPERATIONAL ({total_duration:.2f}s total)[/bold green]\n"
             f"  • [bold green]✔[/bold green] [bold white]{passed_count} / {total_components}[/bold white] Core Subsystems Passed ([green]Zero Hard Failures[/green])\n"
-            f"  • [bold yellow]ℹ[/bold yellow] [bold white]{skipped_count} / {total_components}[/bold white] Consumer Toolchain Skips ([dim]Go/CMake skipped — Expected on consumer nodes[/dim])\n"
+            f"{skip_line}"
             "  • [bold green]✔[/bold green] [bold white]10 / 10[/bold white] Versioned JSON Schema Contracts Validated\n"
             "  • [bold green]✔[/bold green] [bold white]6 / 6[/bold white] Golden Security Corpora Verified\n"
             "  • [bold green]✔[/bold green] [bold white]Air-Gap Isolation:[/bold white] Hermetic Local Execution"
