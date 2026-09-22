@@ -5,6 +5,13 @@ Renders an executive cyber-grade terminal dashboard with live status indicators,
 component layers, verified security invariants, and empirical assurance metrics.
 """
 
+import sys
+import os
+
+# Force UTF-8 encoding for standard output on Windows CMD/PowerShell
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+
 from __future__ import annotations
 
 import argparse
