@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
-"""
-ULPF-X Continuous Security Audit & Verification Engine
-Renders an executive cyber-grade terminal dashboard with live status indicators,
-component layers, verified security invariants, and empirical assurance metrics.
-"""
+from __future__ import absolute_import, division, print_function, unicode_literals, annotations
 
-from __future__ import annotations
+import sys
+import os
+
+# Force UTF-8 stdout encoding on Windows to support bullet characters
+if sys.platform == "win32":
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
 
 import argparse
 import hashlib
 import json
-import os
 import platform
 import subprocess
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Tuple
-
-# Force UTF-8 encoding for standard output on Windows CMD/PowerShell
-if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding='utf-8')
-
 
 from rich import box
 from rich.console import Console
