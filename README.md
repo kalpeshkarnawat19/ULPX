@@ -1,7 +1,6 @@
 # ULPF-X: Universal Log Pre-processing Framework
 > **Autonomous, High-Throughput, Contract-First Security Telemetry Pipeline**  
-> **Problem Statement:** SIH26156 (National Technical Research Organisation — NTRO)  
-> **System Status:** Stage 21 (SIH Demo Polish) • 23 / 23 Subsystems Operational • 300 Automated Tests (100% Green)
+> **System Status:** Stage 21 (Demonstration Polish) • 23 / 23 Subsystems Operational • 300 Automated Tests (100% Green)
 
 [![Air-Gap Profile](https://img.shields.io/badge/Air--Gap%20Profile-Hermetic%20%2F%20Zero%20Outbound-emerald?style=for-the-badge&logo=shield)](file:///tests/airgap/test_airgap.py)
 [![Subsystems](https://img.shields.io/badge/Subsystems-23%20%2F%2023%20Verified-blue?style=for-the-badge&logo=checkmarx)](file:///scripts/audit.py)
@@ -14,7 +13,7 @@
 
 ## Executive Summary
 
-Modern Security Operations Centers (SOCs) and national intelligence infrastructure process billions of heterogeneous security events every day. Traditional log pre-processing pipelines suffer from six systemic vulnerabilities:
+Modern Security Operations Centers (SOCs) and sovereign intelligence infrastructure process billions of heterogeneous security events every day. Traditional log pre-processing pipelines suffer from six systemic vulnerabilities:
 
 1. **Destructive Ingestion:** Raw log strings are prematurely parsed or modified, destroying court-admissible forensic evidence.
 2. **Dynamic Code Vulnerabilities:** Ingestion parsers rely on brittle regular expressions and unsafe interpreters (`eval`, dynamic imports) vulnerable to Regular Expression Denial of Service (ReDoS) and remote exploit execution.
@@ -27,73 +26,76 @@ Modern Security Operations Centers (SOCs) and national intelligence infrastructu
 
 ---
 
-## ⚡ Universal One-Step Quickstart (Run Anywhere)
+## ⚡ Universal 1-Click Quickstart (Run Anywhere)
 
-ULPF-X features a unified universal installer that provisions an isolated standalone engine in `~/.ulpx`, configures shell paths, and registers system-wide CLI tools across **Linux, macOS, and Windows** with zero external dependencies.
+ULPF-X is distributed as a standalone, zero-dependency release package. You do not need to configure complex environments, clone repositories, or install public cloud toolchains—simply download, extract, and click install.
 
-### Option A: Linux, macOS, or WSL / Git Bash
+### Step 1: Download & Extract
+1. Download the latest standalone release zip archive from **GitHub Releases**.
+2. Extract / Unzip the archive to any folder on your machine.
+3. Open the extracted directory.
 
-Run the universal installer directly in your terminal:
+---
 
+### Step 2: One-Click Installation
+
+#### 🪟 Windows (Double-Click or Command Prompt)
+Simply **double-click `install.bat`** in the extracted directory!  
+*(Or open Command Prompt / PowerShell in the folder and execute `install.bat`)*
+
+* The batch launcher automatically detects **Git Bash** if installed (`git-bash.exe`), or seamlessly falls back to the native Windows PowerShell installer with execution policy bypass.
+* Deploys the standalone engine into `%USERPROFILE%\.ulpx` (with automatic timestamped backups of any previous installation).
+* Registers the engine directory in your Windows User `PATH` so global CLI commands are immediately available.
+
+#### 🐧 / 🍏 Linux, macOS, or WSL / Git Bash
+Open your terminal in the extracted directory and run:
 ```bash
-# 1. Clone repository
-git clone https://github.com/kalpeshkarnawat19/SIH-PS-2.git
-cd SIH-PS-2
-
-# 2. Run universal installer
 chmod +x install.sh && ./install.sh
-
-# 3. Reload shell profile (or restart terminal)
-source ~/.bashrc   # or: source ~/.zshrc
-
-# 4. Execute system diagnostics & security audit
-ulpx-test
+source ~/.bashrc   # or: source ~/.zshrc (on macOS / zsh)
 ```
 
-### Option B: Windows (Command Prompt or File Explorer)
+---
 
-1. Simply **double-click** `install.bat`, or execute from Command Prompt:
-   ```cmd
-   install.bat
-   ```
-2. The batch router automatically detects **Git Bash** if present (`git-bash.exe`), or seamlessly falls back to the native PowerShell installer with execution policy bypass.
-3. Restart your Command Prompt or PowerShell, then run:
-   ```cmd
+### Step 3: Verify & Run
+
+Once installed, launch the verified system CLI commands directly from any terminal window:
+
+1. **Execute Continuous Security Audit:**
+   ```bash
    ulpx-test
+   # or from repository root:
+   make audit
    ```
+   *Executes all 23 subsystems (300 tests), renders the executive cyber-grade terminal dashboard, exports a certified Telemetry Passport, and seals execution with a cryptographic SHA-256 digest in ~10 seconds.*
 
-### Option C: Windows (Native PowerShell)
+2. **Launch Interactive Demonstration:**
+   ```bash
+   ulpx
+   # or from repository root:
+   make demo
+   ```
+   *Interactive live console demonstrating all 6 core architectural pillars with clean-state resets.*
 
-Open PowerShell as your current user:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\scripts\install.ps1
-```
-
-### What the Universal Installer Configures
-
-* **Engine Home:** Installs core modules, schemas, and runners into `~/.ulpx` (backing up any prior engine to `~/.ulpx_backup_<timestamp>`).
-* **Environment Hooks:** Updates `~/.bashrc`, `~/.zshrc`, `~/.zprofile`, and Windows User `PATH`.
-* **Global CLI Tools:**
-  * `ulpx` (`~/.ulpx/bin/ulpx`): Launches the interactive live demonstration console.
-  * `ulpx-test` (`~/.ulpx/bin/ulpx-test`): Runs the continuous security audit across all 23 subsystems.
-* **Offline Air-Gap Bundle:** Run `./scripts/build_dist.sh` to package a completely self-contained `ULPF-X-Standalone-v1.0.0.zip` archive containing pre-cached wheels for completely disconnected target systems.
+3. **Sub-second Deep-Dive Inspection:**
+   ```bash
+   make inspect-10    # Subsystem 10: Detection Preservation Gate (DPS = 1.00)
+   make inspect-4     # Subsystem 4: Telemetry Firewall ReDoS & Quarantine Gate
+   make inspect-18    # Subsystem 18: Semantic Drift & Action Inversion Gate
+   ```
 
 ---
 
 ## 🖥️ System Command-Line Reference
 
-| Action | Universal Shortcut | Direct Shell / Make Command | Description |
+| Action | Universal CLI Shortcut | Direct Shell / Make Command | Description |
 |:---|:---|:---|:---|
-| **Continuous Security Audit** | `ulpx-test` | `make audit`<br>`python3 scripts/audit.py` | Validates all 23 subsystems (300 tests), exports certified Telemetry Passport, and emits SHA-256 seal. |
-| **Interactive SIH Demo** | `ulpx` | `make demo`<br>`python3 scripts/demo.py` | Interactive terminal console demonstrating the 6 core architectural pillars with clean-state resets. |
+| **Continuous Security Audit** | `ulpx-test` | `make audit`<br>`python3 scripts/audit.py` | **Primary Test & Verification Suite:** Validates all 23 subsystems (300 tests), exports certified Telemetry Passport, and emits SHA-256 seal. |
+| **Interactive Live Demo** | `ulpx` | `make demo`<br>`python3 scripts/demo.py` | Interactive terminal console demonstrating the 6 core architectural pillars with clean-state resets. |
 | **Deep-Dive Subsystem Inspection** | — | `make inspect-<1-23>`<br>`python3 scripts/audit.py <#>` | Sub-second targeted execution of any single subsystem without running the full test suite. |
 | **List Inspection Targets** | — | `python3 scripts/audit.py list` | Displays numbered index, layer, and scope guard for all 23 subsystems. |
-| **Empirical Benchmark** | — | `make bench` | Runs high-load empirical throughput benchmark (>40,000 EPS) capturing hardware specs and latencies. |
+| **Empirical Benchmark** | — | `make bench` | Runs high-load empirical throughput benchmark (>48,000 EPS) capturing hardware specs and latencies. |
 | **Contract Schema Validation** | — | `make test-contracts` | Validates all 10 JSON Schema contracts using pure standard library (zero app dependencies). |
 | **Hermetic Air-Gap Gate** | — | `make test-airgap` | Proves zero outbound network sockets, zero remote cloud calls, and zero external DNS lookups. |
-| **Full Regression Suite** | — | `make test` | Executes all Go data plane and Python intelligence test suites. |
 
 ---
 
@@ -111,12 +113,12 @@ The ULPF-X architecture is divided into three distinct workstreams to ensure mod
 ├────────────────────────────┼─────────────────────────────┼─────────────────────────────┤
 │ • Ingest Gateway (Stg 1)   │ • Unknown Source Profiler 7 │ • JSON Schemas (Stage 0)    │
 │ • Telemetry Firewall (2)   │ • Semantic Field Mapper (8) │ • Air-Gap Gate (Stage 20)   │
-│ • Parser Runtime DSL (3)   │ • Local AI Assist Engine (9)│ • SIH Demo Rehearsal (21)   │
+│ • Parser Runtime DSL (3)   │ • Local AI Assist Engine (9)│ • Demonstration Rehearsal 21│
 │ • ULPF-IR Normalizer (4)   │ • Spec Compiler & Fuzzer 10 │ • Continuous Audit Dashboard│
 │ • Forensic Lineage (5)     │ • Empirical Validation (11) │ • CLI Deep-Dive Inspector   │
 │ • ECS & OCSF Exporters (6) │ • Detection Contracts (12)  │ • Universal Installers      │
-│ • Detection Runtime (12)   │ • DPS Metric Calculator (13)│   (install.sh / .bat / .ps1)│
-│ • High-Throughput Engine   │ • Telemetry Passport (14)   │ • Distribution Bundler      │
+│ • Detection Runtime (12)   │ • DPS Metric Calculator (13)│   (install.bat/install.sh)  │
+│ • High-Throughput Engine   │ • Telemetry Passport (14)   │ • Distribution Packaging    │
 │   (>48,000 EPS Go Hotpath) │ • Structural Drift (15)     │                             │
 │                            │ • Semantic Drift (16)       │                             │
 │                            │ • Shadow Dual-Execution (17)│                             │
@@ -301,7 +303,7 @@ Empirical performance measured on reference hardware (8-core Intel/AMD x86_64, 1
 
 ## 🔒 Air-Gap Governance & Cryptographic Provenance
 
-ULPF-X is purpose-built for high-assurance, air-gapped national defense and sovereign intelligence infrastructure:
+ULPF-X is purpose-built for high-assurance, air-gapped defense and sovereign security environments:
 
 * **Hermetic Execution:** The automated air-gap gate (`tests/airgap/test_airgap.py`) proves via socket monkey-patching that zero network connections, cloud API calls, or DNS lookups occur during pipeline processing.
 * **Cryptographic Provenance Seals:** Every audit run generates a SHA-256 audit digest derived from git commit hash, subsystem verification states, and elapsed execution time.
@@ -322,7 +324,7 @@ ULPF-X is purpose-built for high-assurance, air-gapped national defense and sove
 ## 📂 Repository Layout
 
 ```
-SIH-PS-2/
+ulpf-x/
 ├── install.sh                  # Universal Unix/Linux/macOS/Git Bash Standalone Installer
 ├── install.bat                 # Universal Windows Command Prompt / Explorer Batch Launcher
 ├── scripts/
@@ -373,5 +375,4 @@ SIH-PS-2/
 
 ## ⚖️ License & Governance
 
-Developed for **Smart India Hackathon 2024 / NTRO Problem Statement SIH26156**.  
 Built strictly in accordance with PRD architectural invariants, stage-gate governance, and air-gapped sovereign security standards.
