@@ -5,13 +5,6 @@ Renders an executive cyber-grade terminal dashboard with live status indicators,
 component layers, verified security invariants, and empirical assurance metrics.
 """
 
-import sys
-import os
-
-# Force UTF-8 encoding for standard output on Windows CMD/PowerShell
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8')
-
 from __future__ import annotations
 
 import argparse
@@ -25,6 +18,11 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+# Force UTF-8 encoding for standard output on Windows CMD/PowerShell
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 
 from rich import box
 from rich.console import Console
