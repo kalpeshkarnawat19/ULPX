@@ -1,42 +1,33 @@
+# scripts/install.ps1
 $ErrorActionPreference = "Stop"
-$INSTALL_DIR = "$env:USERPROFILE\.ulpx"
 
-Write-Host "Registering ULPF-X Engine globally at: $INSTALL_DIR" -ForegroundColor Cyan
-New-Item -ItemType Directory -Force -Path $INSTALL_DIR | Out-Null
-Copy-Item -Recurse -Force -Path ".*", "*" -Destination $INSTALL_DIR
+Write-Host "=======================================================" -ForegroundColor Cyan
+Write-Host "  ULPF-X PowerShell Native Standalone Installer" -ForegroundColor Cyan
+Write-Host "=======================================================" -ForegroundColor Cyan
 
-# 1. Register with Windows CMake Registry
-$RegPath = "HKCU:\Software\Kitware\CMake\Packages\ulpx"
-if (-not (Test-Path $RegPath)) { New-Item -Path $RegPath -Force | Out-Null }
-New-ItemProperty -Path $RegPath -Name "ULPX" -Value $INSTALL_DIR -PropertyType String -Force | Out-Null
-Write-Host "  Registered with Windows CMake Registry" -ForegroundColor Green
+$TargetDir = "$ENV:USERPROFILE\.ulpx"
 
-$PythonPath = (Get-Command python -ErrorAction Stop).Source
-Write-Host "Installing Python dependencies..." -ForegroundColor Cyan
-$RequirementsFile = Join-Path $INSTALL_DIR "requirements.txt"
-if (Test-Path $RequirementsFile) {
-    & $PythonPath -m pip install --quiet -r $RequirementsFile
-} else {
-    & $PythonPath -m pip install --quiet rich psutil
+# 1. Create ~/.ulpx directory
+if (-not (Test-Path $TargetDir)) {
+    New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
+    Write-Host "[SUCCESS] Created engine folder at $TargetDir" -ForegroundColor Green
 }
 
-# 2. Add scripts folder to User Path
+# 2. Sync files into .ulpx
+Copy-Item -Path ".\*" -Destination $TargetDir -Recurse -Force
+Write-Host "[SUCCESS] Synchronized engine core files." -ForegroundColor Green
+
+# 3. Register user PATH variable natively
+$BinPath = "$TargetDir\bin"
 $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
-if ($UserPath -notlike "*$INSTALL_DIR\scripts*") {
-    [Environment]::SetEnvironmentVariable("Path", "$UserPath;$INSTALL_DIR\scripts", "User")
+
+if ($UserPath -notlike "*$BinPath*") {
+    [Environment]::SetEnvironmentVariable("Path", "$UserPath;$BinPath", "User")
+    Write-Host "[SUCCESS] Registered $BinPath into Windows User PATH." -ForegroundColor Green
+} else {
+    Write-Host "[INFO] PATH already configured in Windows Environment." -ForegroundColor Yellow
 }
 
-# 3. Create persistent aliases in PowerShell Profile
-if (-not (Test-Path $PROFILE)) { New-Item -Type File -Path $PROFILE -Force | Out-Null }
-$Hook = @"
-# ULPF-X Global Hook
-`$env:ULPX_HOME = '$INSTALL_DIR'
-function global:ulpx { & '$PythonPath' "`$env:ULPX_HOME\scripts\demo.py" @args }
-function global:ulpx-test { & '$PythonPath' "`$env:ULPX_HOME\scripts\audit.py" @args }
-"@
-if ((Get-Content $PROFILE -Raw) -notlike "*ULPX_HOME*") {
-    Add-Content -Path $PROFILE -Value $Hook
-    Write-Host "  Injected persistent hook into PowerShell Profile" -ForegroundColor Green
-}
-
-Write-Host "`nULPF-X is active across all terminals and CMake contexts!" -ForegroundColor Green
+Write-Host "`n[✔] ULPF-X standalone installation complete!" -ForegroundColor Green
+Write-Host "Please restart your PowerShell or Terminal window, then run 'ulpx-test'." -ForegroundColor Yellow
+Write-Host "=======================================================" -ForegroundColor Cyan

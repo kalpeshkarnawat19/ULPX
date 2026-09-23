@@ -19,18 +19,18 @@ if %errorlevel% equ 0 (
     set "GIT_BASH_PATH=%LocalAppData%\Programs\Git\git-bash.exe"
 )
 
-:: 2. Execute via Git Bash if available; fallback to native PowerShell
+:: 2. Auto-route execution: Git Bash preferred, PowerShell as native fallback
 if defined GIT_BASH_PATH (
-    echo [INFO] Environment located: Git Bash
+    echo [INFO] Detected Git Bash environment. Launching installer...
     "%GIT_BASH_PATH%" -c "./install.sh; echo ''; read -p 'Press Enter to exit...' "
 ) else (
-    echo [INFO] Git Bash not detected. Launching native PowerShell installer...
+    echo [INFO] Git Bash not found. Launching native Windows PowerShell installer...
     powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\install.ps1"
 )
 
 if %errorlevel% neq 0 (
     color 0C
     echo.
-    echo [ERROR] Installation hit an unexpected error.
+    echo [ERROR] Installation encountered an error.
     pause
 )
