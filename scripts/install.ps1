@@ -5,6 +5,12 @@ Write-Host "=======================================================" -Foreground
 Write-Host "  ULPF-X PowerShell Native Standalone Installer" -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
 
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RootDir = Split-Path -Parent $ScriptDir
+if (-not (Test-Path "$RootDir\packages")) {
+    $RootDir = (Get-Location).Path
+}
+
 $TargetDir = "$ENV:USERPROFILE\.ulpx"
 
 # 1. Create ~/.ulpx directory
@@ -13,8 +19,10 @@ if (-not (Test-Path $TargetDir)) {
     Write-Host "[SUCCESS] Created engine folder at $TargetDir" -ForegroundColor Green
 }
 
-# 2. Sync files into .ulpx
-Copy-Item -Path ".\*" -Destination $TargetDir -Recurse -Force
+# 2. Sync files into .ulpx from repository root
+Get-ChildItem -Path $RootDir -Exclude ".git*", "*.zip", "dist" | ForEach-Object {
+    Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse -Force
+}
 Write-Host "[SUCCESS] Synchronized engine core files." -ForegroundColor Green
 
 # 3. Register user PATH variable natively

@@ -325,10 +325,13 @@ ULPF-X is purpose-built for high-assurance, air-gapped defense and sovereign sec
 
 ```
 ulpf-x/
-├── install.sh                  # Universal Unix/Linux/macOS/Git Bash Standalone Installer
-├── install.bat                 # Universal Windows Command Prompt / Explorer Batch Launcher
+├── install.sh                  # Root 1-click installer launcher (Unix/Linux/macOS)
+├── install.bat                 # Root 1-click installer launcher (Windows CMD/Explorer)
 ├── scripts/
-│   ├── install.ps1             # Native Windows PowerShell Standalone Installer
+│   ├── install.sh              # Standalone Unix/Linux/macOS engine installer
+│   ├── install.bat             # Standalone Windows batch execution router
+│   ├── install.ps1             # Native Windows PowerShell standalone installer
+│   ├── env.sh                  # Shell PATH environment configuration
 │   ├── build_dist.sh           # Air-gapped offline distribution packager
 │   ├── audit.py                # Cyber-grade 23-subsystem continuous audit engine
 │   └── demo.py                 # Interactive live demonstration rehearsal console

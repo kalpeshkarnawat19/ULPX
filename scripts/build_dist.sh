@@ -16,7 +16,7 @@ python3 -m pip download -d "$DIST_DIR/wheels" rich psutil pytest --quiet
 
 # 2. Copy source repository files
 echo "  • Bundling system engine and scripts..."
-cp -r scripts packages requirements.txt install.sh README.md "$DIST_DIR/" 2>/dev/null || true
+cp -r scripts packages apps bin fixtures requirements.txt install.sh install.bat Makefile README.md "$DIST_DIR/" 2>/dev/null || true
 
 # 3. Create Distribution Archive
 cd dist
