@@ -331,6 +331,159 @@ a { color: inherit; text-decoration: none; }
   padding: 0 17px;
 }
 
+/* ================================
+   INSTALLATION GUIDE
+================================ */
+
+.installation {
+  padding: 72px 0 65px;
+  border-top: 1px solid var(--line);
+}
+
+.installation .section-heading {
+  max-width: 760px;
+}
+
+.installation .section-heading p {
+  max-width: 720px;
+}
+
+.installation .section-heading code {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(46, 64, 70, .07);
+  color: #344b54;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: .92em;
+}
+
+/* Installation cards */
+
+.installation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.installation-card {
+  min-height: 205px;
+  padding: 25px 27px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .48);
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    border-color .2s ease;
+}
+
+.installation-card:hover {
+  transform: translateY(-3px);
+  background: rgba(248, 251, 250, .82);
+  border-color: rgba(74, 105, 115, .25);
+}
+
+.installation-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 19px;
+  border-bottom: 1px solid var(--line);
+}
+
+.installation-card-top > div {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.installation-number {
+  font-size: 11px;
+  color: #7d969e;
+  letter-spacing: .06em;
+}
+
+.installation-card-top strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.installation-shell {
+  color: #71858d;
+  font-size: 11px;
+  text-align: right;
+  line-height: 1.4;
+}
+
+/* Commands */
+
+.installation-command {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding-top: 20px;
+}
+
+.command-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 2px;
+  color: #78909a;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .16em;
+}
+
+.installation-command code {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 8px;
+  background: rgba(38, 52, 59, .065);
+  color: #30464f;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.installation-command code b {
+  font-weight: 600;
+  color: #1f3a43;
+}
+
+.command-or {
+  color: #87969b;
+  font-size: 10px;
+  margin: -2px 0;
+}
+
+/* Bottom installation note */
+
+.installation-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 13px 16px;
+  border-left: 2px solid var(--mint);
+  color: #71818a;
+  background: rgba(218, 242, 237, .28);
+  border-radius: 0 8px 8px 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.installation-note svg {
+  flex: 0 0 auto;
+  color: #69bdb4;
+}
+
 .section {
   margin: 0 5.8vw;
 }
@@ -592,10 +745,39 @@ a { color: inherit; text-decoration: none; }
   .feature-grid { grid-template-columns: repeat(3, 1fr); }
   .pipeline { grid-template-columns: repeat(3, 1fr); }
   .pipeline-node:nth-child(3) { border-right: 0; }
+  .installation-grid {
+    grid-template-columns: 1fr;
+  }
   .pipeline-node:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
 }
 
 @media (max-width: 700px) {
+    .installation {
+    margin-left: 5vw;
+    margin-right: 5vw;
+  }
+
+  .installation-card {
+    padding: 21px;
+    min-height: auto;
+  }
+
+  .installation-card-top {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .installation-shell {
+    text-align: left;
+  }
+
+  .installation-command code {
+    font-size: 11px;
+  }
+
+  .installation-note {
+    align-items: flex-start;
+  }
   .site-header { grid-template-columns: 1fr auto; padding: 0 5vw; }
   .nav { display: none; }
   .brand { font-size: 18px; }
