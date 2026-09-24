@@ -7,3 +7,4 @@ work/demo/
 # Binaries
 apps/ingest-gateway/ingest-gateway
 artifacts/
+*.zip
