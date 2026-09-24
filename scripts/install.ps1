@@ -7,6 +7,13 @@ Write-Host "=======================================================" -Foreground
 
 $TargetDir = "$ENV:USERPROFILE\.ulpx"
 
+# Determine repository root reliably
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$RootDir = Split-Path -Parent $ScriptDir
+if (-not (Test-Path "$RootDir\scripts\audit.py")) {
+    $RootDir = (Get-Item -Path ".\").FullName
+}
+
 # 1. Create target engine directory
 if (-not (Test-Path -Path $TargetDir)) {
     New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
@@ -15,7 +22,7 @@ if (-not (Test-Path -Path $TargetDir)) {
 
 # 2. Mirror source files into .ulpx
 Write-Host "[INFO] Synchronizing engine core files..." -ForegroundColor Yellow
-Get-ChildItem -Path ".\" -Exclude "*.zip", ".git*" | ForEach-Object {
+Get-ChildItem -Path $RootDir -Exclude "*.zip", ".git*", "dist", ".pytest_cache", "venv" | ForEach-Object {
     Copy-Item -Path $_.FullName -Destination $TargetDir -Recurse -Force
 }
 
