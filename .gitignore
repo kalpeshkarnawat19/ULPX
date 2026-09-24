@@ -8,3 +8,4 @@ work/demo/
 apps/ingest-gateway/ingest-gateway
 artifacts/
 *.zip
+*.zip
