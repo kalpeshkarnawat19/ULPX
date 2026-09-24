@@ -86,10 +86,8 @@ export default function Home() {
             </small>
           </div>
 
-          <a className="mint-button compact" href="/downloads/ULPF-X-Standalone-v1.0.0.zip"
-  download
->
-            Download Agent <ArrowUpRight size={16} />
+          <a className="mint-button compact" href="/api/download">
+            Download ULPF-X Standalone <ArrowUpRight size={16} />
           </a>
         </div>
       </section>
