@@ -187,6 +187,20 @@ func (n *Normalizer) Normalize(env RawEnvelopeInput, parseResult *parser_runtime
 		}
 	}
 
+	var dnsInfo *DNSInfo
+	if ex["dns.query_name"] != nil || ex["dns.query_type"] != nil || ex["dns.response_code"] != nil {
+		dnsInfo = &DNSInfo{}
+		if qn, ok := ex["dns.query_name"].(string); ok {
+			dnsInfo.QueryName = qn
+		}
+		if qt, ok := ex["dns.query_type"].(string); ok {
+			dnsInfo.QueryType = qt
+		}
+		if rc, ok := ex["dns.response_code"].(string); ok {
+			dnsInfo.ResponseCode = rc
+		}
+	}
+
 	// 8. Extensions (preserves all unmapped fields)
 	extensions := make(map[string]interface{})
 	for k, v := range parseResult.UnknownFields {
@@ -214,6 +228,7 @@ func (n *Normalizer) Normalize(env RawEnvelopeInput, parseResult *parser_runtime
 		User:       userInfo,
 		Device:     deviceInfo,
 		HTTP:       httpInfo,
+		DNS:        dnsInfo,
 		Alert:      alertInfo,
 		Parser: ParserMetadata{
 			ID:      spec.Parser.ID,
