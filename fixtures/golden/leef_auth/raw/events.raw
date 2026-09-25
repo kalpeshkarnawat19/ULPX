@@ -1,0 +1,1 @@
+LEEF:2.0|Trend Micro|Deep Security|9.0|2000000|^|src=10.10.10.10^dst=10.10.10.20^proto=TCP^action=block^usrName=admin^cat=Auth

@@ -1,0 +1,8 @@
+{
+  "source_id": "json_cloudtrail",
+  "format": "json",
+  "description": "AWS CloudTrail identity and management audit log in JSON",
+  "critical_fields": ["src.ip", "user.name", "event.action"],
+  "min_extraction_accuracy": 0.98,
+  "requires_raw_retention": true
+}

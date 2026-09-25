@@ -1,0 +1,8 @@
+{
+  "$schema": "../../packages/contracts/parser_spec.schema.json",
+  "dsl_version": "1.0", "parser": {"id": "demo.firewall.kv", "version": "1.0.0"},
+  "match": {"format": "syslog", "body_contains": ["src=", "dst="]},
+  "body_parser": {"type": "key_value", "pair_separator": " ", "key_value_separator": "="},
+  "fields": {"src": {"type": "ip", "map_to": "src.ip", "transformations": ["trim", "ip"]}, "dst": {"type": "ip", "map_to": "dst.ip"}, "spt": {"type": "integer", "map_to": "src.port"}, "dpt": {"type": "integer", "map_to": "dst.port"}, "action": {"type": "string", "map_to": "event.action", "enum": {"deny": "blocked", "allow": "allowed"}}},
+  "unknown_fields": {"policy": "preserve"}, "raw": {"preserve": true}
+}

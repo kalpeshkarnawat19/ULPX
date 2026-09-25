@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/self_healing_report/1.0",
+  "title": "SelfHealingReport",
+  "description": "Machine-readable record of an autonomous or policy-gated self-healing parser repair and promotion decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_id",
+    "incident_id",
+    "trigger",
+    "active_parser",
+    "candidate_parser",
+    "gates",
+    "promotion_policy",
+    "decision",
+    "decided_at",
+    "applied_by"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "source_id": {"type": "string", "minLength": 1},
+    "incident_id": {"type": "string", "minLength": 1},
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["drift_state", "detected_at", "summary"],
+      "properties": {
+        "drift_state": {
+          "type": "string",
+          "enum": ["DRIFTED", "SUSPECTED", "MANUAL_TRIGGER"]
+        },
+        "detected_at": {"type": "string", "format": "date-time"},
+        "summary": {"type": "string"}
+      }
+    },
+    "active_parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    },
+    "candidate_parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "spec_hash"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "spec_hash": {"type": "string", "minLength": 1}
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_validation", "empirical_validation", "shadow_evaluation"],
+      "properties": {
+        "schema_validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["passed", "details"],
+          "properties": {
+            "passed": {"type": "boolean"},
+            "details": {"type": "string"}
+          }
+        },
+        "empirical_validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passed",
+            "extraction_accuracy",
+            "semantic_accuracy",
+            "dps",
+            "raw_retention",
+            "unknown_retention"
+          ],
+          "properties": {
+            "passed": {"type": "boolean"},
+            "extraction_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+            "semantic_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+            "dps": {"type": "number", "minimum": 0, "maximum": 1},
+            "raw_retention": {"type": "number", "minimum": 0, "maximum": 1},
+            "unknown_retention": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "shadow_evaluation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passed",
+            "shadow_state",
+            "field_match_rate",
+            "dps_delta",
+            "downstream_isolation_verified"
+          ],
+          "properties": {
+            "passed": {"type": "boolean"},
+            "shadow_state": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED", "SUSPECTED"]
+            },
+            "field_match_rate": {"type": "number", "minimum": 0, "maximum": 1},
+            "dps_delta": {"type": "number", "minimum": -1, "maximum": 1},
+            "downstream_isolation_verified": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "promotion_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "refusal_conditions_checked",
+        "refusal_reasons"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["MANUAL_APPROVAL", "AUTOMATIC_CONDITIONAL"]
+        },
+        "refusal_conditions_checked": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "refusal_reasons": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["PROMOTED", "REJECTED", "ESCALATED_FOR_APPROVAL"]
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "applied_by": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -1,0 +1,1 @@
+CEF:0|SecurityCorp|ThreatShield|2.4.1|1001|Malware Blocked|7|src=10.0.0.15 dst=172.16.0.4 spt=44122 dpt=443 action=block filePath=/tmp/malware.sh

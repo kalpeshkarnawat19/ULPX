@@ -1,0 +1,14 @@
+{
+  "extracted": {
+    "src.ip": "10.0.0.1",
+    "dst.ip": "192.168.1.1",
+    "src.port": 44321,
+    "dst.port": 443,
+    "event.action": "blocked",
+    "host.name": "fw-01"
+  },
+  "critical_fields": ["src.ip", "dst.ip", "event.action"],
+  "unknown_fields": {
+    "rule": "DropInbound"
+  }
+}

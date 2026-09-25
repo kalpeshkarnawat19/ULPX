@@ -1,0 +1,8 @@
+{
+  "source_id": "syslog_firewall",
+  "format": "syslog",
+  "description": "Enterprise perimeter firewall logs emitted over Syslog RFC 5424 with key-value payload",
+  "critical_fields": ["src.ip", "dst.ip", "event.action"],
+  "min_extraction_accuracy": 0.98,
+  "requires_raw_retention": true
+}

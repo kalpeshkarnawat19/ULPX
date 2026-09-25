@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Deterministic non-frontend demo rehearsal using existing golden corpora.",
+  "sources": [
+    {"fixture": "fixtures/golden/syslog_firewall", "expected_source_id": "syslog_firewall"},
+    {"fixture": "fixtures/golden/cef_edr", "expected_source_id": "cef_edr"}
+  ],
+  "dashboard": {"included": false, "reason": "No frontend is implemented; this rehearsal does not fabricate dashboard data."}
+}

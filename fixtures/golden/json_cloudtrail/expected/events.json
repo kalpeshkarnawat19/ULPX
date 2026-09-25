@@ -1,0 +1,12 @@
+{
+  "extracted": {
+    "src.ip": "203.0.113.19",
+    "user.name": "alice",
+    "event.action": "ConsoleLogin",
+    "event.timestamp": "2026-09-16T12:00:00Z"
+  },
+  "critical_fields": ["src.ip", "user.name", "event.action"],
+  "unknown_fields": {
+    "eventVersion": "1.08"
+  }
+}

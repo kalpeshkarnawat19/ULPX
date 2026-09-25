@@ -1,0 +1,15 @@
+{
+  "extracted": {
+    "src.ip": "10.0.0.15",
+    "dst.ip": "172.16.0.4",
+    "src.port": 44122,
+    "dst.port": 443,
+    "event.action": "blocked",
+    "observer.vendor": "SecurityCorp",
+    "observer.product": "ThreatShield"
+  },
+  "critical_fields": ["src.ip", "dst.ip", "event.action"],
+  "unknown_fields": {
+    "filePath": "/tmp/malware.sh"
+  }
+}

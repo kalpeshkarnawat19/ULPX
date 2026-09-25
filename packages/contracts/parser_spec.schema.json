@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/parser_spec/1.0",
+  "title": "ParserSpec",
+  "description": "Declarative parser data. It cannot express executable code, imports, shell calls, or network calls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dsl_version", "parser", "match", "body_parser", "fields", "unknown_fields", "raw"],
+  "properties": {
+    "dsl_version": {"const": "1.0"},
+    "parser": {"type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}},
+    "match": {"type": "object", "additionalProperties": false, "required": ["format"], "properties": {"format": {"type": "string", "enum": ["syslog", "json", "cef", "leef", "key_value", "csv"]}, "body_contains": {"type": "array", "items": {"type": "string"}}}},
+    "body_parser": {"type": "object", "additionalProperties": false, "required": ["type"], "properties": {"type": {"type": "string", "enum": ["key_value", "json", "cef", "leef", "syslog", "csv"]}, "pair_separator": {"type": "string"}, "key_value_separator": {"type": "string"}, "delimiter": {"type": "string"}, "headers": {"type": "array", "items": {"type": "string"}}}},
+    "fields": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["type", "map_to"], "properties": {"type": {"type": "string", "enum": ["string", "integer", "float", "boolean", "ip", "timestamp"]}, "map_to": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)*$"}, "enum": {"type": "object", "additionalProperties": {"type": "string"}}, "transformations": {"type": "array", "items": {"$ref": "#/$defs/operation"}}}}},
+    "unknown_fields": {"type": "object", "additionalProperties": false, "required": ["policy"], "properties": {"policy": {"const": "preserve"}}},
+    "raw": {"type": "object", "additionalProperties": false, "required": ["preserve"], "properties": {"preserve": {"const": true}}}
+  },
+  "$defs": {"operation": {"type": "string", "enum": ["trim", "lowercase", "uppercase", "integer", "float", "boolean", "ip", "timestamp", "enum_map", "split", "join", "substring", "json_pointer", "key_value", "regex_capture", "cef_parse", "leef_parse", "syslog_parse", "csv_parse"]}}
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../packages/contracts/parser_spec.schema.json",
+  "dsl_version": "1.0",
+  "parser": {
+    "id": "golden.cef.edr",
+    "version": "1.0.0"
+  },
+  "match": {
+    "format": "cef"
+  },
+  "body_parser": {
+    "type": "cef"
+  },
+  "fields": {
+    "src": {
+      "type": "ip",
+      "map_to": "src.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "dst": {
+      "type": "ip",
+      "map_to": "dst.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "spt": {
+      "type": "integer",
+      "map_to": "src.port"
+    },
+    "dpt": {
+      "type": "integer",
+      "map_to": "dst.port"
+    },
+    "action": {
+      "type": "string",
+      "map_to": "event.action",
+      "enum": {
+        "block": "blocked",
+        "allow": "allowed"
+      }
+    },
+    "device_vendor": {
+      "type": "string",
+      "map_to": "observer.vendor"
+    },
+    "device_product": {
+      "type": "string",
+      "map_to": "observer.product"
+    }
+  },
+  "unknown_fields": {
+    "policy": "preserve"
+  },
+  "raw": {
+    "preserve": true
+  }
+}

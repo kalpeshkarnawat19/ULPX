@@ -1,0 +1,5 @@
+name: ulpf-x
+
+# Stage 0 intentionally defines no runnable services. Future stages may add
+# contract-backed services here after their own stage gates pass.
+services: {}

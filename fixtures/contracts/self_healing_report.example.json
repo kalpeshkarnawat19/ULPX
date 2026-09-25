@@ -1,0 +1,55 @@
+{
+  "$schema": "../../packages/contracts/self_healing_report.schema.json",
+  "schema_version": "1.0",
+  "source_id": "demo-firewall",
+  "incident_id": "INC-2026-0919-001",
+  "trigger": {
+    "drift_state": "DRIFTED",
+    "detected_at": "2026-09-19T00:00:00Z",
+    "summary": "Structural drift detected: new fields and key-set distance exceeded threshold"
+  },
+  "active_parser": {
+    "id": "demo.firewall.kv",
+    "version": "1.4.0"
+  },
+  "candidate_parser": {
+    "id": "demo.firewall.kv",
+    "version": "1.5.0",
+    "spec_hash": "sha256-a1b2c3d4e5f60123456789abcdef"
+  },
+  "gates": {
+    "schema_validation": {
+      "passed": true,
+      "details": "Candidate spec matches parser_spec.schema.json v1.0"
+    },
+    "empirical_validation": {
+      "passed": true,
+      "extraction_accuracy": 1.0,
+      "semantic_accuracy": 1.0,
+      "dps": 1.0,
+      "raw_retention": 1.0,
+      "unknown_retention": 1.0
+    },
+    "shadow_evaluation": {
+      "passed": true,
+      "shadow_state": "PASSED",
+      "field_match_rate": 1.0,
+      "dps_delta": 0.0,
+      "downstream_isolation_verified": true
+    }
+  },
+  "promotion_policy": {
+    "mode": "AUTOMATIC_CONDITIONAL",
+    "refusal_conditions_checked": [
+      "REFUSAL_1_SCHEMA_INVALID",
+      "REFUSAL_2_VALIDATION_INCOMPLETE",
+      "REFUSAL_3_DETECTION_TESTS_FAILED",
+      "REFUSAL_4_RETENTION_BELOW_100",
+      "REFUSAL_5_SHADOW_UNPASSED_OR_LEAKED"
+    ],
+    "refusal_reasons": []
+  },
+  "decision": "PROMOTED",
+  "decided_at": "2026-09-19T00:05:00Z",
+  "applied_by": "POLICY_ENGINE"
+}

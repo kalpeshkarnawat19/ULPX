@@ -1,0 +1,12 @@
+{
+  "$schema": "../../packages/contracts/raw_event_envelope.schema.json",
+  "schema_version": "1.0",
+  "event_id": "01J9A0K0P0Z3R3M5WQ6F7H8J9K",
+  "source_id": "src_demo_firewall",
+  "received_at": "2026-09-16T09:30:00Z",
+  "transport": "syslog_tcp",
+  "raw_ref": "raw/2026/09/16/src_demo_firewall/01J9A0K0P0Z3R3M5WQ6F7H8J9K",
+  "raw_sha256": "4a0a19218e082a343393b8bd810de8a39c8f7ff733e3ce81d89b3e056c1003fe",
+  "raw_length_bytes": 241,
+  "ingest_status": "ACCEPTED"
+}

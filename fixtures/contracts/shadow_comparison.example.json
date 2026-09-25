@@ -1,0 +1,51 @@
+{
+  "$schema": "../../packages/contracts/shadow_comparison.schema.json",
+  "schema_version": "1.0",
+  "source_id": "demo-firewall",
+  "active_parser": {
+    "id": "demo.firewall.kv",
+    "version": "1.4.0"
+  },
+  "candidate_parser": {
+    "id": "demo.firewall.kv",
+    "version": "1.5.0"
+  },
+  "shadow_state": "PASSED",
+  "evaluated_at": "2026-09-19T00:00:00Z",
+  "evaluation_window": {
+    "start_time": "2026-09-18T23:00:00Z",
+    "end_time": "2026-09-19T00:00:00Z",
+    "sample_count": 1000
+  },
+  "metrics": {
+    "field_match_rate": 0.998,
+    "critical_semantic_divergence": 0.0,
+    "unknown_field_retention": 1.0,
+    "active_dps": 1.0,
+    "candidate_dps": 1.0,
+    "dps_delta": 0.0,
+    "active_latency_p95_ms": 1.25,
+    "candidate_latency_p95_ms": 1.10,
+    "latency_delta_pct": -12.0
+  },
+  "field_divergences": [
+    {
+      "field": "network.packets",
+      "match_rate": 0.985,
+      "divergence_type": "VALUE_MISMATCH",
+      "example_mismatch": {
+        "active": "100",
+        "candidate": 100
+      }
+    }
+  ],
+  "downstream_isolation_verified": true,
+  "recommendation": "READY_FOR_PROMOTION",
+  "recommendation_reasons": [
+    "Zero critical semantic divergence observed across 1000 shadow samples",
+    "Detection preservation score (DPS) fully preserved at 100%",
+    "Unknown field retention maintained at 100%",
+    "p95 latency improved by 12.0%",
+    "Downstream bus isolation successfully verified"
+  ]
+}

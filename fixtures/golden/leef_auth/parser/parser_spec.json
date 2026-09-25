@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../packages/contracts/parser_spec.schema.json",
+  "dsl_version": "1.0",
+  "parser": {
+    "id": "golden.leef.auth",
+    "version": "1.0.0"
+  },
+  "match": {
+    "format": "leef"
+  },
+  "body_parser": {
+    "type": "leef"
+  },
+  "fields": {
+    "src": {
+      "type": "ip",
+      "map_to": "src.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "dst": {
+      "type": "ip",
+      "map_to": "dst.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "usrName": {
+      "type": "string",
+      "map_to": "user.name"
+    },
+    "action": {
+      "type": "string",
+      "map_to": "event.action",
+      "enum": {
+        "block": "blocked",
+        "allow": "allowed"
+      }
+    },
+    "proto": {
+      "type": "string",
+      "map_to": "network.transport"
+    }
+  },
+  "unknown_fields": {
+    "policy": "preserve"
+  },
+  "raw": {
+    "preserve": true
+  }
+}

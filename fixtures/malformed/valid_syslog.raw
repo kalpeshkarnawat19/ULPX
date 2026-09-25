@@ -1,0 +1,1 @@
+<134>Sep 16 23:30:00 edge-firewall src=192.168.1.50 dst=10.0.0.1 spt=54321 dpt=443 action=allow proto=tcp

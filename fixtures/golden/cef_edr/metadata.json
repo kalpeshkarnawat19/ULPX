@@ -1,0 +1,8 @@
+{
+  "source_id": "cef_edr",
+  "format": "cef",
+  "description": "ArcSight Common Event Format endpoint detection and response telemetry",
+  "critical_fields": ["src.ip", "dst.ip", "event.action"],
+  "min_extraction_accuracy": 0.98,
+  "requires_raw_retention": true
+}

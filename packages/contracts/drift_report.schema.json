@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/drift_report/1.0",
+  "title": "DriftReport",
+  "description": "Machine-readable structural drift assessment comparing current log profile against rolling baseline.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_id",
+    "parser",
+    "drift_state",
+    "observed_at",
+    "window",
+    "signals",
+    "thresholds",
+    "drift_details",
+    "remediation_recommended"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "source_id": {"type": "string", "minLength": 1},
+    "parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    },
+    "drift_state": {
+      "type": "string",
+      "enum": ["STABLE", "SUSPECTED", "DRIFTED"]
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_time", "end_time", "sample_count"],
+      "properties": {
+        "start_time": {"type": "string", "format": "date-time"},
+        "end_time": {"type": "string", "format": "date-time"},
+        "baseline_run_id": {"type": ["string", "null"]},
+        "sample_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parse_failure_rate",
+        "unknown_field_ratio",
+        "type_violation_rate",
+        "key_set_distance",
+        "distribution_divergence"
+      ],
+      "properties": {
+        "parse_failure_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "unknown_field_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+        "type_violation_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "key_set_distance": {"type": "number", "minimum": 0, "maximum": 1},
+        "distribution_divergence": {"type": "number", "minimum": 0, "maximum": 1},
+        "dps_regression": {"type": "number", "minimum": 0, "maximum": 1},
+        "enum_drift_score": {"type": "number", "minimum": 0, "maximum": 1},
+        "critical_mapping_drift": {"type": "number", "minimum": 0, "maximum": 1},
+        "event_family_drift": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parse_failure_rate",
+        "unknown_field_ratio",
+        "type_violation_rate",
+        "key_set_distance",
+        "distribution_divergence"
+      ],
+      "properties": {
+        "parse_failure_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "unknown_field_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+        "type_violation_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "key_set_distance": {"type": "number", "minimum": 0, "maximum": 1},
+        "distribution_divergence": {"type": "number", "minimum": 0, "maximum": 1},
+        "dps_regression": {"type": "number", "minimum": 0, "maximum": 1},
+        "enum_drift_score": {"type": "number", "minimum": 0, "maximum": 1},
+        "critical_mapping_drift": {"type": "number", "minimum": 0, "maximum": 1},
+        "event_family_drift": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "drift_details": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "remediation_recommended": {
+      "type": "boolean"
+    }
+  }
+}

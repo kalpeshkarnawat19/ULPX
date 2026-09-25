@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "deployment_mode": "air_gap",
+  "images": [
+    {"tag": "ulpfx-ingest-gateway:local", "pull_policy": "never"},
+    {"tag": "ulpfx-normalize-worker:local", "pull_policy": "never"}
+  ],
+  "schemas": [
+    "packages/contracts/raw_event_envelope.schema.json",
+    "packages/contracts/normalized_event.schema.json",
+    "packages/contracts/parser_spec.schema.json",
+    "packages/contracts/telemetry_passport.schema.json"
+  ],
+  "models": [
+    {
+      "id": "deterministic-mapping-fallback",
+      "path": "ml/ai_assist/assistant.py",
+      "network_requirement": "none"
+    }
+  ],
+  "frontend": {"included": false, "reason": "No frontend has been implemented; no dashboard is represented in the air-gap profile."}
+}

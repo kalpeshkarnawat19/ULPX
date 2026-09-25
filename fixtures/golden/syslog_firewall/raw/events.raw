@@ -1,0 +1,1 @@
+<134>1 2026-09-16T15:00:00Z fw-01 firewall 412 - - src=10.0.0.1 dst=192.168.1.1 spt=44321 dpt=443 action=deny rule=DropInbound

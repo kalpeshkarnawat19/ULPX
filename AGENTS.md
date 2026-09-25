@@ -1,0 +1,32 @@
+# ULPF-X repository rules
+
+## Stage gate
+
+This repository is currently at Stage 21: SIH Demo Polish. Stages 1-20 are
+complete. Air-gap execution must use local artifacts only and must never pull a
+public image or call a public service. The frontend is not implemented: do not
+seed, mock, or claim dashboard behavior.
+
+## Non-negotiable rules
+
+1. Contract first: services may only exchange artifacts defined in
+   `packages/contracts/*.schema.json`.
+2. Raw events are immutable. Preserve their bytes through `raw_ref`, SHA-256, and
+   byte length; do not replace them with parsed representations.
+3. The parser DSL is data, not code. Only documented whitelist operations are
+   valid; never introduce eval, shell commands, dynamic imports, or network calls.
+4. Preserve unknown fields. Abstain instead of inventing an uncertain mapping.
+5. Breaking contract changes require an ADR and a schema version increment.
+6. Every contract change must add/update an example and pass `make test-contracts`.
+7. A Telemetry Passport is certified only from a passed validation run with a
+   complete measured metric set and a measured drift state. Otherwise expose
+   `NOT YET MEASURED`, never a placeholder number.
+8. Demo rehearsal must derive its evidence from real fixtures and validation
+   execution. It may not contain fabricated scores or manual data edits.
+
+## Layout
+
+- `packages/contracts/`: versioned JSON Schema contracts.
+- `fixtures/contracts/`: valid, human-readable examples for each contract.
+- `tests/contracts/`: contract-only validation; must not import application code.
+- `apps/`, `ml/`, `infra/`: reserved skeletons for later approved stages.

@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../packages/contracts/parser_spec.schema.json",
+  "dsl_version": "1.0",
+  "parser": {
+    "id": "golden.csv.access",
+    "version": "1.0.0"
+  },
+  "match": {
+    "format": "csv"
+  },
+  "body_parser": {
+    "type": "csv",
+    "delimiter": ",",
+    "headers": ["timestamp", "src_ip", "dst_ip", "status", "method", "uri"]
+  },
+  "fields": {
+    "src_ip": {
+      "type": "ip",
+      "map_to": "src.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "dst_ip": {
+      "type": "ip",
+      "map_to": "dst.ip",
+      "transformations": ["trim", "ip"]
+    },
+    "status": {
+      "type": "integer",
+      "map_to": "http.response.status_code"
+    },
+    "method": {
+      "type": "string",
+      "map_to": "http.request.method",
+      "transformations": ["uppercase"]
+    },
+    "timestamp": {
+      "type": "timestamp",
+      "map_to": "event.timestamp"
+    }
+  },
+  "unknown_fields": {
+    "policy": "preserve"
+  },
+  "raw": {
+    "preserve": true
+  }
+}

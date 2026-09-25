@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/telemetry_passport/1.1",
+  "title": "TelemetryPassport",
+  "description": "Machine-readable assurance record. Numeric metrics are permitted only for a certified parser linked to a passed validation run; uncertified records display NOT YET MEASURED.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_id", "parser", "validation", "certification", "scores", "drift"],
+  "properties": {
+    "schema_version": {"const": "1.1"}, "source_id": {"type": "string", "minLength": 1},
+    "parser": {"type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"type": "string", "minLength": 1}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}},
+    "validation": {"type": "object", "additionalProperties": false, "required": ["status", "run_id", "completed_at"], "properties": {"status": {"type": "string", "enum": ["PASSED", "FAILED", "NOT_YET_MEASURED"]}, "run_id": {"type": ["string", "null"], "minLength": 1, "description": "Immutable validation evidence reference."}, "completed_at": {"type": ["string", "null"], "format": "date-time"}}},
+    "certification": {"type": "object", "additionalProperties": false, "required": ["status", "timestamp"], "properties": {"status": {"type": "string", "enum": ["CERTIFIED", "NOT_CERTIFIED"]}, "timestamp": {"type": ["string", "null"], "format": "date-time"}}},
+    "scores": {"type": "object", "additionalProperties": false, "required": ["extraction_accuracy", "semantic_accuracy", "raw_retention", "unknown_field_retention", "detection_preservation"], "properties": {"extraction_accuracy": {"$ref": "#/$defs/metric"}, "semantic_accuracy": {"$ref": "#/$defs/metric"}, "raw_retention": {"$ref": "#/$defs/metric"}, "unknown_field_retention": {"$ref": "#/$defs/metric"}, "detection_preservation": {"$ref": "#/$defs/metric"}}},
+    "drift": {"type": "object", "additionalProperties": false, "required": ["state", "observed_at"], "properties": {"state": {"type": "string", "enum": ["STABLE", "SUSPECTED", "DRIFTED", "NOT_YET_MEASURED"]}, "observed_at": {"type": ["string", "null"], "format": "date-time"}}}
+  },
+  "allOf": [
+    {"if": {"properties": {"certification": {"properties": {"status": {"const": "CERTIFIED"}}}}}, "then": {"properties": {"certification": {"properties": {"timestamp": {"type": "string"}}}, "validation": {"properties": {"status": {"const": "PASSED"}, "run_id": {"type": "string"}, "completed_at": {"type": "string"}}}, "scores": {"properties": {"extraction_accuracy": {"type": "number"}, "semantic_accuracy": {"type": "number"}, "raw_retention": {"type": "number"}, "unknown_field_retention": {"type": "number"}, "detection_preservation": {"type": "number"}}}, "drift": {"properties": {"state": {"enum": ["STABLE", "SUSPECTED", "DRIFTED"]}, "observed_at": {"type": "string"}}}}}},
+    {"if": {"properties": {"certification": {"properties": {"status": {"const": "NOT_CERTIFIED"}}}}}, "then": {"properties": {"scores": {"properties": {"extraction_accuracy": {"const": "NOT YET MEASURED"}, "semantic_accuracy": {"const": "NOT YET MEASURED"}, "raw_retention": {"const": "NOT YET MEASURED"}, "unknown_field_retention": {"const": "NOT YET MEASURED"}, "detection_preservation": {"const": "NOT YET MEASURED"}}}, "drift": {"properties": {"state": {"const": "NOT_YET_MEASURED"}, "observed_at": {"type": "null"}}}}}}
+  ],
+  "$defs": {"metric": {"oneOf": [{"type": "number", "minimum": 0, "maximum": 1}, {"const": "NOT YET MEASURED"}]}}
+}

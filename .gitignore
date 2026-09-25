@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+work/demo/
+
+# Binaries & build artifacts
+apps/ingest-gateway/ingest-gateway
+apps/normalize-worker/normalize-worker
+*.exe
+*.zip
+*.tar.gz
+artifacts/
+dist/

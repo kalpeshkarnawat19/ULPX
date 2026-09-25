@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/raw_event_envelope/1.0",
+  "title": "RawEventEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "source_id", "received_at", "transport", "raw_ref", "raw_sha256", "raw_length_bytes", "ingest_status"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "event_id": {"type": "string", "pattern": "^(?:[0-7][0-9A-HJKMNP-TV-Z]{25}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$", "description": "ULID or UUIDv7 assigned at ingest."},
+    "source_id": {"type": "string", "minLength": 1},
+    "received_at": {"type": "string", "format": "date-time"},
+    "transport": {"type": "string", "enum": ["syslog_tcp", "syslog_udp", "http", "file", "agent", "unknown"]},
+    "raw_ref": {"type": "string", "minLength": 1, "description": "Immutable raw object reference."},
+    "raw_sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"},
+    "raw_length_bytes": {"type": "integer", "minimum": 0},
+    "ingest_status": {"type": "string", "enum": ["ACCEPTED", "QUARANTINED", "REJECTED"]}
+  }
+}

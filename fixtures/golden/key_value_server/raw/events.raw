@@ -1,0 +1,1 @@
+timestamp="2026-09-16 14:30:00" src=172.16.1.5 dst=8.8.8.8 proto=UDP action=allow user=admin session_id=98765

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ulpfx.local/contracts/normalized_event/1.0",
+  "title": "NormalizedEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "event", "source", "parser", "raw", "quality", "extensions"],
+  "properties": {
+    "schema_version": {"const": "1.0"}, "event_id": {"type": "string", "pattern": "^(?:[0-7][0-9A-HJKMNP-TV-Z]{25}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"},
+    "event": {"type": "object", "additionalProperties": false, "required": ["class", "action", "outcome", "time"], "properties": {"class": {"type": "string", "minLength": 1}, "action": {"type": "string", "minLength": 1}, "outcome": {"type": "string", "enum": ["success", "failure", "unknown"]}, "time": {"type": "string", "format": "date-time"}}},
+    "source": {"type": "object", "additionalProperties": false, "required": ["vendor", "product", "device_id"], "properties": {"vendor": {"type": "string"}, "product": {"type": "string"}, "device_id": {"type": "string"}}},
+    "src": {"$ref": "#/$defs/endpoint"}, "dst": {"$ref": "#/$defs/endpoint"},
+    "network": {"type": "object", "additionalProperties": false, "properties": {"protocol": {"type": "string"}}},
+    "user": {"type": "object", "additionalProperties": false, "properties": {"name": {"type": "string"}, "id": {"type": "string"}, "domain": {"type": "string"}}},
+    "device": {"type": "object", "additionalProperties": false, "properties": {"hostname": {"type": "string"}, "ip": {"type": "string"}, "mac": {"type": "string"}}},
+    "http": {"type": "object", "additionalProperties": false, "properties": {"method": {"type": "string"}, "status_code": {"type": "integer"}, "url": {"type": "string"}}},
+    "dns": {"type": "object", "additionalProperties": false, "properties": {"query_name": {"type": "string"}, "query_type": {"type": "string"}, "response_code": {"type": "string"}}},
+    "alert": {"type": "object", "additionalProperties": false, "properties": {"severity": {"type": "string"}, "name": {"type": "string"}, "category": {"type": "string"}}},
+    "parser": {"type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"type": "string", "minLength": 1}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}},
+    "raw": {"type": "object", "additionalProperties": false, "required": ["ref", "sha256"], "properties": {"ref": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"}}},
+    "quality": {"type": "object", "additionalProperties": false, "required": ["mapping_score", "status"], "properties": {"mapping_score": {"type": "number", "minimum": 0, "maximum": 1}, "status": {"type": "string", "enum": ["VERIFIED", "REVIEW_REQUIRED", "ABSTAINED"]}}},
+    "extensions": {"type": "object", "description": "Preserved source fields not safely mapped."}
+  },
+  "$defs": {"endpoint": {"type": "object", "additionalProperties": false, "properties": {"ip": {"type": "string", "format": "ipv4"}, "port": {"type": "integer", "minimum": 0, "maximum": 65535}}}}
+}
