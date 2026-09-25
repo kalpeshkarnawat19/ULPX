@@ -15,7 +15,7 @@ TARGET_DIR="$HOME/.ulpx"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # --- Step 1: Pre-flight Verification ---
-echo "[1/5] Checking host environment..."
+echo "[1/6] Checking host environment..."
 if [ -d "$TARGET_DIR" ]; then
     echo "  ↳ Existing ULPF-X engine detected at $TARGET_DIR"
     echo "  ↳ Backing up existing engine configuration..."
@@ -24,13 +24,13 @@ if [ -d "$TARGET_DIR" ]; then
 fi
 
 # --- Step 2: Target Directory Provisioning ---
-echo "[2/5] Creating engine home directory structure..."
+echo "[2/6] Creating engine home directory structure..."
 mkdir -p "$TARGET_DIR/bin"
 mkdir -p "$TARGET_DIR/scripts"
 mkdir -p "$TARGET_DIR/logs"
 
 # --- Step 3: Clean Extraction & Mirroring ---
-echo "[3/5] Mirroring engine core files into $TARGET_DIR..."
+echo "[3/6] Mirroring engine core files into $TARGET_DIR..."
 # Mirror from repository root using tar stream
 (
     cd "$ROOT_DIR"
@@ -57,7 +57,7 @@ chmod +x "$TARGET_DIR/bin/"* 2>/dev/null || true
 chmod +x "$TARGET_DIR/scripts/"* 2>/dev/null || true
 
 # --- Step 4: Multi-Shell Hook Registration (Bash & Zsh Support) ---
-echo "[4/5] Registering shell configuration hooks..."
+echo "[4/6] Registering shell configuration hooks..."
 
 register_shell_config() {
     local RC_FILE="$1"
@@ -88,8 +88,29 @@ if [ "$(uname)" = "Darwin" ]; then
     register_shell_config "$HOME/.zprofile" "zsh-profile"
 fi
 
-# --- Step 5: Post-Install Verification & Terminal Integration ---
-echo "[5/5] Testing environment state..."
+# --- Step 5: Python Dependency Verification ---
+echo "[5/6] Verifying Python dependencies..."
+PY_BIN=""
+for p in python3 python py; do
+    if command -v "$p" >/dev/null 2>&1; then
+        PY_BIN="$p"
+        break
+    fi
+done
+
+if [ -n "$PY_BIN" ]; then
+    if [ -d "$TARGET_DIR/wheels" ]; then
+        echo "  ↳ Installing offline wheel dependencies from $TARGET_DIR/wheels..."
+        "$PY_BIN" -m pip install --no-index --find-links="$TARGET_DIR/wheels" rich psutil pytest --quiet 2>/dev/null || true
+    else
+        echo "  ↳ Installing required dependencies (rich, psutil, pytest)..."
+        "$PY_BIN" -m pip install rich psutil pytest --quiet 2>/dev/null || true
+    fi
+    echo "  ✔ Python dependencies verified."
+fi
+
+# --- Step 6: Post-Install Verification & Terminal Integration ---
+echo "[6/6] Testing environment state..."
 
 # Source into current running subshell for immediate execution test
 export PATH="$TARGET_DIR/bin:$PATH"

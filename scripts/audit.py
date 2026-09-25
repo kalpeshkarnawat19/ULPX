@@ -19,12 +19,32 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from rich import box
-from rich.console import Console
-from rich.live import Live
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
+try:
+    from rich import box
+    from rich.console import Console
+    from rich.live import Live
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+except ImportError:
+    # Attempt automatic self-healing installation
+    print("[*] Required dependency 'rich' not found. Installing CLI rendering packages...")
+    try:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "rich", "psutil", "pytest", "--quiet"]
+        )
+        from rich import box
+        from rich.console import Console
+        from rich.live import Live
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich.text import Text
+    except Exception:
+        print("\n[!] Error: Missing required Python dependency: 'rich'")
+        print("Please install required dependencies by running:")
+        print("    pip install -r requirements.txt")
+        print("    (or: python -m pip install rich psutil pytest)\n")
+        sys.exit(1)
 
 console = Console()
 ROOT = Path(__file__).resolve().parents[1]
