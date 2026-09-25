@@ -38,8 +38,11 @@ echo "[3/5] Mirroring engine core files into $TARGET_DIR..."
         --exclude='./install.bat' \
         --exclude='./.git*' \
         --exclude='*.zip' \
+        --exclude='*.tar.gz' \
         --exclude='./dist' \
         --exclude='./venv' \
+        --exclude='./node_modules' \
+        --exclude='./.next' \
         --exclude='./.pytest_cache' \
         -cf - .
 ) | (cd "$TARGET_DIR" && tar -xf -)
