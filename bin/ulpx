@@ -11,7 +11,7 @@ elif [ -f "$ENGINE_ROOT/venv/bin/python" ]; then
 fi
 
 # 2. Try standard python commands, checking for actual execution rather than stub aliases
-for py_cmd in python py python3; do
+for py_cmd in python3 python py; do
     if "$py_cmd" --version >/dev/null 2>&1; then
         exec "$py_cmd" "$ENGINE_ROOT/scripts/demo.py" "$@"
     fi

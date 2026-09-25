@@ -65,10 +65,10 @@ def main() -> int:
     ]
 
     for name, fmt, spec in specs:
-        print(f"\n[+] Running benchmark: {name} (1,000 events, unconstrained)...")
+        print(f"\n[+] Running benchmark: {name} (10,000 events, unconstrained)...")
         report = harness.run_parser_benchmark(
             parser_spec=spec,
-            event_count=1000,
+            event_count=10000,
             format_type=fmt,
             target_eps=5000.0,
             component_name="parser_runtime",

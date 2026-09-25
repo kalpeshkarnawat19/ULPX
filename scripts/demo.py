@@ -229,7 +229,7 @@ def demo_benchmarks() -> None:
     table.add_column("5k Target Verification", style="bold", justify="center")
 
     harness = BenchmarkHarness()
-    event_count = 1000
+    event_count = 10000
 
     with console.status(f"[bold cyan]Running live saturation benchmark on host hardware ({event_count:,} events)...[/bold cyan]", spinner="dots"):
         cef_report = harness.run_parser_benchmark(

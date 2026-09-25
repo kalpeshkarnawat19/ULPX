@@ -55,6 +55,9 @@ fi
 # Ensure execution permissions on bin/ and scripts/
 chmod +x "$TARGET_DIR/bin/"* 2>/dev/null || true
 chmod +x "$TARGET_DIR/scripts/"* 2>/dev/null || true
+if command -v xattr >/dev/null 2>&1; then
+    xattr -cr "$TARGET_DIR" 2>/dev/null || true
+fi
 
 # --- Step 4: Multi-Shell Hook Registration (Bash & Zsh Support) ---
 echo "[4/6] Registering shell configuration hooks..."
