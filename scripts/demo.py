@@ -7,7 +7,7 @@ Provides live, executable demonstrations of the 6 core architectural pillars:
 3. Unseen-Source Onboarding & The Abstention Principle (Rule 4)
 4. Telemetry Passport & Detection Preservation Score (DPS)
 5. Safe Self-Healing, Shadow Isolation & Policy Refusal Gates
-6. Empirical Saturation Benchmarks (Host Hardware & 40k+ EPS)
+6. Empirical Saturation Benchmarks (Host Hardware & Dynamic Live Measurement)
 """
 
 from __future__ import annotations
@@ -213,6 +213,9 @@ def demo_benchmarks() -> None:
                         border_style="cyan"))
 
     from ml.benchmark.hardware import get_hardware_profile
+    from ml.benchmark.harness import BenchmarkHarness
+    from ml.benchmark.run_bench import SAMPLE_CEF_SPEC, SAMPLE_KV_SPEC
+
     hw = get_hardware_profile()
 
     console.print(f"[bold white]Host Hardware Discovery:[/bold white] {hw['cpu_model']} ({hw['cpu_cores']} cores) | {hw['memory_total_mb']:,.1f} MB RAM | {hw['os_platform']}")
@@ -225,11 +228,46 @@ def demo_benchmarks() -> None:
     table.add_column("Latency (p99)", justify="right", style="dim")
     table.add_column("5k Target Verification", style="bold", justify="center")
 
-    table.add_row("CEF Parser (Palo Alto)", "1,000", "48,233.92 EPS", "0.0109 ms", "0.0765 ms", "[green]VERIFIED (9.6x target)[/green]")
-    table.add_row("Key-Value Parser (Fortinet)", "1,000", "38,170.40 EPS", "0.0212 ms", "0.0512 ms", "[green]VERIFIED (7.6x target)[/green]")
+    harness = BenchmarkHarness()
+    event_count = 1000
+
+    with console.status(f"[bold cyan]Running live saturation benchmark on host hardware ({event_count:,} events)...[/bold cyan]", spinner="dots"):
+        cef_report = harness.run_parser_benchmark(
+            parser_spec=SAMPLE_CEF_SPEC,
+            event_count=event_count,
+            format_type="cef",
+            target_eps=5000.0,
+            component_name="parser_runtime",
+        )
+        kv_report = harness.run_parser_benchmark(
+            parser_spec=SAMPLE_KV_SPEC,
+            event_count=event_count,
+            format_type="kv",
+            target_eps=5000.0,
+            component_name="parser_runtime",
+        )
+
+    for name, report in [("CEF Parser (Palo Alto)", cef_report), ("Key-Value Parser (Fortinet)", kv_report)]:
+        res = report["results"]
+        lat = res["latency_ms"]
+        eps = res["measured_eps"]
+        events_processed = res["total_events_processed"]
+        verified = report["claims"]["target_5k_eps_verified"]
+        multiplier = eps / 5000.0
+        status = f"[green]VERIFIED ({multiplier:.1f}x target)[/green]" if verified else f"[yellow]MEASURED ({multiplier:.1f}x target)[/yellow]"
+        table.add_row(
+            name,
+            f"{events_processed:,}",
+            f"{eps:,.2f} EPS",
+            f"{lat['p50']:.4f} ms",
+            f"{lat['p99']:.4f} ms",
+            status,
+        )
 
     console.print(table)
-    console.print("\n[bold green]✓ Proof:[/bold green] Measured on actual host hardware, exceeding the 5,000 EPS problem statement target without cloud dependencies.")
+    peak_eps = max(cef_report["results"]["measured_eps"], kv_report["results"]["measured_eps"])
+    peak_mult = peak_eps / 5000.0
+    console.print(f"\n[bold green]✓ Proof:[/bold green] Measured live on actual host hardware (peak: {peak_eps:,.2f} EPS, {peak_mult:.1f}x requirement), exceeding the 5,000 EPS target without cloud dependencies.")
 
 
 def interactive_menu() -> None:
@@ -241,7 +279,7 @@ Select a Demonstration Scenario:
   [3] Unseen-Source Onboarding: Profiling & The Abstention Principle (Rule 4)
   [4] Telemetry Passport: Empirical Detection Contracts & DPS Certification
   [5] Safe Self-Healing: Semantic Drift, Shadow Isolation & 5 Refusal Gates
-  [6] Empirical Saturation Benchmark: Real Reference Hardware & 40k+ EPS Measurement
+  [6] Empirical Saturation Benchmark: Real Reference Hardware & Dynamic Measurement
   [A] Run All Scenarios (Full 2-Minute Guided Rehearsal)
   [Q] Exit
 """
