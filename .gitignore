@@ -3,6 +3,22 @@ node_modules
 out
 .env*
 .DS_Store
-# Python cache
+
+# Python cache & test artifacts
 __pycache__/
 *.py[cod]
+.pytest_cache/
+
+# Compiled Go binaries
+apps/ingest-gateway/ingest-gateway
+ingest-gateway
+*.exe
+*.test
+
+# Runtime & audit test artifacts
+artifacts/
+data/
+
+# Distribution builds & archives
+dist/
+*.zip
