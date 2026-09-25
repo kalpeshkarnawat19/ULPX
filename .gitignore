@@ -4,8 +4,11 @@ __pycache__/
 .env
 work/demo/
 
-# Binaries
+# Binaries & build artifacts
 apps/ingest-gateway/ingest-gateway
+apps/normalize-worker/normalize-worker
+*.exe
+*.zip
+*.tar.gz
 artifacts/
-*.zip
-*.zip
+dist/
