@@ -33,9 +33,21 @@ class SpecTestBench:
 
         # Static validation without dynamic execution (strictly no exec/eval)
         if compiled_spec.compiled_code:
-            import ast
             try:
-                ast.parse(compiled_spec.compiled_code)
+                from ml.spec_compiler.schemas import TargetRuntime
+                if compiled_spec.target_runtime == TargetRuntime.PYTHON_NATIVE:
+                    import ast
+                    ast.parse(compiled_spec.compiled_code)
+                elif compiled_spec.target_runtime == TargetRuntime.VECTOR_REMAP:
+                    # Validate Vector Remap Language line structure
+                    for line in compiled_spec.compiled_code.splitlines():
+                        trimmed = line.strip()
+                        if trimmed and not trimmed.startswith("."):
+                            raise ValueError(f"Invalid Vector Remap line: {trimmed}")
+                else:
+                    # ULPF_PARSER_SPEC and LOGSTASH configs are structured JSON
+                    import json
+                    json.loads(compiled_spec.compiled_code)
             except Exception as e:
                 return {
                     "passed": False,

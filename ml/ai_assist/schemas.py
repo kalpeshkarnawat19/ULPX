@@ -3,6 +3,7 @@ from typing import Dict, Any, Set
 # Canonical Target Registry (Strict validation to eliminate hallucinated target fields)
 CANONICAL_SCHEMA_REGISTRY: Set[str] = {
     "src.ip", "src.port", "src.mac", "src.host",
+    "dst.ip", "dst.port", "dst.mac", "dst.host",
     "dest.ip", "dest.port", "dest.mac", "dest.host",
     "event.action", "event.category", "event.outcome", "event.type",
     "user.name", "user.id", "user.domain", "user.email", "user.role",
