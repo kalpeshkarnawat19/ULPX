@@ -42,6 +42,8 @@ tar --exclude='./install.sh' \
     --exclude='*.tar.gz' \
     --exclude='./dist' \
     --exclude='./venv' \
+    --exclude='./node_modules' \
+    --exclude='./.next' \
     --exclude='./.pytest_cache' \
     -cf - . | (cd "$TARGET_DIR" && tar -xf -)
 

@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
-# ULPF-X Interactive Demonstration CLI Launcher
+# ULPF-X Main Engine CLI Launcher
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENGINE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-if command -v python3 >/dev/null 2>&1; then
-    exec python3 "$ENGINE_ROOT/scripts/demo.py" "$@"
-elif command -v python >/dev/null 2>&1; then
-    exec python "$ENGINE_ROOT/scripts/demo.py" "$@"
-else
-    echo "Error: Python 3 runtime not found in PATH." >&2
-    exit 1
+# 1. Check local virtual environment first if present
+if [ -f "$ENGINE_ROOT/venv/Scripts/python.exe" ]; then
+    exec "$ENGINE_ROOT/venv/Scripts/python.exe" "$ENGINE_ROOT/scripts/demo.py" "$@"
+elif [ -f "$ENGINE_ROOT/venv/bin/python" ]; then
+    exec "$ENGINE_ROOT/venv/bin/python" "$ENGINE_ROOT/scripts/demo.py" "$@"
 fi
+
+# 2. Try standard python commands, checking for actual execution rather than stub aliases
+for py_cmd in python py python3; do
+    if "$py_cmd" --version >/dev/null 2>&1; then
+        exec "$py_cmd" "$ENGINE_ROOT/scripts/demo.py" "$@"
+    fi
+done
+
+echo "Error: Valid Python 3 runtime not found in PATH or virtualenv." >&2
+exit 1
