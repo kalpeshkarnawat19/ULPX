@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# ULPF-X Shorthand Launcher: Stop Background Daemon Mode
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/ulpx" ]; then
+    exec "$SCRIPT_DIR/ulpx" daemon stop "$@"
+elif command -v ulpx >/dev/null 2>&1; then
+    exec ulpx daemon stop "$@"
+fi
+echo "Error: 'ulpx' executable not found in $SCRIPT_DIR or PATH." >&2
+exit 1

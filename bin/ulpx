@@ -5,15 +5,15 @@ ENGINE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # 1. Check local virtual environment first if present
 if [ -f "$ENGINE_ROOT/venv/Scripts/python.exe" ]; then
-    exec "$ENGINE_ROOT/venv/Scripts/python.exe" "$ENGINE_ROOT/scripts/demo.py" "$@"
+    exec "$ENGINE_ROOT/venv/Scripts/python.exe" "$ENGINE_ROOT/scripts/cli.py" "$@"
 elif [ -f "$ENGINE_ROOT/venv/bin/python" ]; then
-    exec "$ENGINE_ROOT/venv/bin/python" "$ENGINE_ROOT/scripts/demo.py" "$@"
+    exec "$ENGINE_ROOT/venv/bin/python" "$ENGINE_ROOT/scripts/cli.py" "$@"
 fi
 
 # 2. Try standard python commands, checking for actual execution rather than stub aliases
 for py_cmd in python3 python py; do
     if "$py_cmd" --version >/dev/null 2>&1; then
-        exec "$py_cmd" "$ENGINE_ROOT/scripts/demo.py" "$@"
+        exec "$py_cmd" "$ENGINE_ROOT/scripts/cli.py" "$@"
     fi
 done
 

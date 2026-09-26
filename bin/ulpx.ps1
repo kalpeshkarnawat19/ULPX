@@ -5,7 +5,7 @@ $EngineRoot = Split-Path -Parent $ScriptDir
 
 # 1. Virtualenv check
 if (Test-Path "$EngineRoot\venv\Scripts\python.exe") {
-    & "$EngineRoot\venv\Scripts\python.exe" "$EngineRoot\scripts\demo.py" @args
+    & "$EngineRoot\venv\Scripts\python.exe" "$EngineRoot\scripts\cli.py" @args
     exit $LASTEXITCODE
 }
 
@@ -20,7 +20,7 @@ if (Get-Command "python" -ErrorAction SilentlyContinue) {
 }
 
 if ($PythonCmd) {
-    & $PythonCmd "$EngineRoot\scripts\demo.py" @args
+    & $PythonCmd "$EngineRoot\scripts\cli.py" @args
     exit $LASTEXITCODE
 }
 

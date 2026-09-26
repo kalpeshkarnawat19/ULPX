@@ -12,3 +12,8 @@ apps/normalize-worker/normalize-worker
 *.tar.gz
 artifacts/
 dist/
+
+# Reference / private design documents
+ULPF-X_Agent_Executable_Build_Guide_3-Person_Team_Edition.pdf
+ULPF-X_PRD_Technical_Architecture_3-Person_Team_Edition.pdf
+Understanding.md
