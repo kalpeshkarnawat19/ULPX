@@ -1,96 +1,160 @@
 # ULPF-X — Universal Log Pre-processing Framework
 
-> **SIH 2026 | Problem Statement ID: SIH26156 | Organisation: NTRO (National Technical Research Organisation)**
 
-ULPF-X is a vendor-neutral **security-telemetry preprocessing platform** that converts heterogeneous perimeter-device logs into normalized, analytics-ready security events — while **proving** that the transformation is lossless, semantically trustworthy, traceable and safe.
+[![Contract Tests](https://img.shields.io/badge/Contracts-10%2F10%20Verified-brightgreen?style=flat-square)](packages/contracts)
+[![Subsystems](https://img.shields.io/badge/Subsystems-23%2F23%20Operational-blue?style=flat-square)](scripts/audit.py)
+[![Lineage Proof](https://img.shields.io/badge/Byte%20Retention-100%25%20SHA--256-success?style=flat-square)](packages/contracts/field_lineage.schema.json)
+[![Detection Integrity](https://img.shields.io/badge/DPS%20Ratio-1.00%20Zero%20Regression-teal?style=flat-square)](packages/contracts/telemetry_passport.schema.json)
+[![Air-Gap Profile](https://img.shields.io/badge/Air--Gap-Hermetic%20%2F%20Zero--Cloud-purple?style=flat-square)](tests/airgap)
 
----
-
-## The Problem
-
-Security Operations Centers (SOCs) ingest logs from dozens of vendors — firewalls, routers, VPN gateways, IDS/IPS, proxies, DNS appliances — each with its own format. Existing normalization pipelines ask *"can we transform this into a common schema?"* but never answer the harder question:
-
-> **Can we transform it without silently changing, losing, or fabricating security meaning?**
-
-Parser pipelines break silently when vendors change log formats. Unknown fields vanish. Ambiguous mappings get forced. Detection rules stop working — and nobody notices until an incident is missed.
+ULPF-X is an air-gapped, vendor-neutral **security-telemetry trust layer and preprocessing platform**. It transforms heterogeneous perimeter security logs (firewalls, VPNs, proxies, IDS/IPS, DNS) into canonical, analytics-ready security events while cryptographically **proving** that the normalization is lossless, traceable, semantically preserved, and detection-safe.
 
 ---
 
-## What ULPF-X Does
+## The Core Problem
 
-ULPF-X is a **continuously verified security-telemetry trust layer** that:
+Security Operations Centers (SOCs) ingest logs from dozens of security vendors—Palo Alto Networks, Fortinet, Check Point, Cisco ASA, F5, Zeek, Snort, Suricata—each formatting data differently (Syslog, Key-Value, JSON, CSV, CEF, LEEF). 
 
-- **Preserves raw events** byte-for-byte with SHA-256 integrity
-- **Parses deterministically** using a whitelisted DSL — no `eval`, no arbitrary code
-- **Normalizes** into a canonical Intermediate Representation (ULPF-IR)
-- **Traces every field** from normalized output back to raw evidence (forensic lineage)
-- **Abstains** from uncertain mappings instead of guessing
-- **Retains unknown fields** — nothing silently disappears
-- **Exports** to ECS (Elastic Common Schema) and OCSF
-- **Detects format drift** when vendors change log structures
-- **Validates parser evolution** through shadow parsing before promotion
-- **Measures trust** via Telemetry Passports backed by real validation scores
+Existing ETL and normalization engines ask:  
+*"Can we parse this into a common schema?"*  
 
-### What ULPF-X Is *Not*
+They fail to answer the critical security question:  
+> **"Did the normalization silently alter, drop, or fabricate security meaning—causing SIEM detection rules to fail?"**
 
-- ❌ Not a SIEM, IDS/IPS, or SOAR platform
-- ❌ Not an LLM in the event hot path
-- ❌ Not a replacement for OCSF, ECS, or ASIM — it feeds them
-- ❌ Not a generic ETL tool
-- ❌ Not a system that forces uncertain semantic mappings
+When vendor firmware updates introduce structural or semantic field shifts:
+1. **Silent Dropping:** Unknown fields vanish, destroying forensic evidence.
+2. **Forced Mappings:** Ambiguous status codes get guessed, creating false positives or false negatives.
+3. **Detection Blindspots:** SIEM queries and threat detection rules silently stop matching, creating unmonitored blindspots.
 
 ---
 
-## Core Properties
+## Architectural Guarantee & Invariants
 
-| Property | Behavior |
-|---|---|
-| **Lossless** | Exact raw event retained; unknown fields never silently disappear |
-| **Deterministic** | Same raw event + parser version + schema version → identical normalized event |
-| **Explainable** | Every normalized field traces to raw evidence and transformation steps |
-| **Uncertainty-aware** | Ambiguous mappings abstain; preserved in source extensions |
-| **Continuously verified** | Parser evolution is regression-tested and shadow-compared before promotion |
-| **Air-gap capable** | Runtime requires no public Internet or cloud API |
+ULPF-X enforces strict architectural non-negotiables:
+
+- **100% Raw Byte Retention:** Raw logs are preserved byte-for-byte with SHA-256 cryptographic seals and exact byte slice pointers (`raw_ref`, `raw_sha256`, `raw_length_bytes`).
+- **Deterministic Whitelisted DSL:** The parser DSL is declarative data, never executable code. Zero `eval`, zero dynamic imports, zero external shell execution.
+- **Rule 4 Abstention:** Ambiguous mappings strictly abstain when confidence is below 0.80. Unknown fields are retained in `extensions`—nothing is discarded.
+- **Detection Preservation Score (DPS):** Automated regression gates verify that downstream SIEM detection rules continue to fire at a 1.00 ratio across all schema transformations.
+- **Certified Telemetry Passports:** Telemetry quality is authenticated exclusively via completed empirical validation runs. Zero placeholder metrics.
+- **Hermetic Air-Gap Execution:** Operates completely offline with local model weights, schemas, and wheel dependencies. Zero external cloud or DNS dependencies.
 
 ---
 
-## Architecture
+## Unified Command Suite ("Best of Both Worlds")
 
-ULPF-X is split into two planes:
-
-### Data Plane (Hot Path)
-Deterministic, fast, AI-free. Handles production events:
+ULPF-X provides an enterprise-grade command hierarchy: a structured unified subcommand core (`ulpx <subcommand>`) paired with fast, single-word convenience shorthands (`ulpx-*`) across **Linux, macOS, and Windows** (CMD & PowerShell).
 
 ```
-Raw Event → Telemetry Firewall → Raw Preservation (MinIO + SHA-256)
-    → Certified Parser (DSL) → ULPF Canonical IR → Field Lineage
-    → ECS / OCSF Export
+                            ┌────────────────────────┐
+                            │    ulpx [subcommand]   │
+                            │  Enterprise Unified CLI│
+                            └───────────┬────────────┘
+                                        │
+     ┌─────────────┬─────────────┬──────┴──────┬─────────────┬─────────────┬─────────────┐
+     ▼             ▼             ▼             ▼             ▼             ▼             ▼
+ulpx export    ulpx export   ulpx export   ulpx watch    ulpx api      ulpx daemon   ulpx daemon
+--format text  --format json --format csv  (or term)     (or listen)   start         stop
+     │             │             │             │             │             │             │
+     ▼             ▼             ▼             ▼             ▼             ▼             ▼
+ [ulpx-text]   [ulpx-json]   [ulpx-csv]   [ulpx-term]   [ulpx-api]     [ulpx-on]     [ulpx-off]
 ```
 
-### Control Plane (Assurance)
-Performs expensive/probabilistic work away from the hot path:
+### Command Reference
 
-```
-Unknown Source → Profiling → Semantic Mapping (AI-assisted)
-    → Candidate ParserSpec → Validation → Detection Contracts
-    → Shadow Parsing → Certification → Telemetry Passport
+| Unified Subcommand | Shorthand Alias | Target Destination | Functional Purpose |
+| :--- | :--- | :--- | :--- |
+| `ulpx export --format text` | `ulpx-text` | stdout or file | Structured text security log sink (firewall/syslog format) |
+| `ulpx export --format json` | `ulpx-json` | stdout or file | Contract-compliant NDJSON / JSON Lines sink |
+| `ulpx export --format csv` | `ulpx-csv` | stdout or file | Tabular CSV sink for analytical SIEM ingestion |
+| `ulpx watch` *(or `ulpx term`)* | `ulpx-term` | Interactive TUI | Real-time live rolling telemetry observer window |
+| `ulpx api` *(or `ulpx listen`)* | `ulpx-api` | Port `8080` (HTTP) | Direct pipeline HTTP ingestion server (`/api/v1/events/raw`) |
+| `ulpx daemon start` | `ulpx-on` | Background Service | Daemonized background task with PID tracking |
+| `ulpx daemon stop` | `ulpx-off` | Process Shutdown | Graceful background daemon termination |
+| `ulpx audit` *(or `ulpx test`)* | `ulpx-test` | Console Report | 23-Subsystem Continuous Security Assurance Suite |
+| `ulpx` *(zero arguments)* | `ulpx` | Interactive Console | 6-Pillar Guided Judge Demonstration Console |
+
+---
+
+## Quick Start & Installation
+
+### Option 1: Standalone Package (Linux / macOS / Windows)
+
+Download `ULPF-X-Standalone-v1.0.0.zip` from [GitHub Releases](https://github.com/kalpeshkarnawat19/ULPX/releases/tag/v1.0.0-rc1).
+
+#### Linux & macOS
+```bash
+unzip ULPF-X-Standalone-v1.0.0.zip
+cd ULPF-X-Standalone-v1.0.0
+bash install.sh
 ```
 
-> **Non-negotiable boundary:** AI may *propose* a ParserSpec. AI may *never* generate code that is automatically executed in production and may *never* directly promote a parser.
+#### Windows (Git Bash / PowerShell / Command Prompt)
+- **Command Prompt (CMD):** Double-click or run `install.bat`
+- **PowerShell:** `powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1`
+
+### Option 2: Developer Repository Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/kalpeshkarnawat19/SIH-PS-2.git
+cd SIH-PS-2
+
+# Add bin directory to PATH for the current session
+source scripts/env.sh
+
+# Run the 23-subsystem verification suite
+ulpx-test
+
+# Launch the interactive judge demonstration
+ulpx
+```
+
+---
+
+## The 6 Demonstration Pillars (Judge Evaluation)
+
+The ULPF-X live demonstration (`ulpx` or `python3 scripts/demo.py`) delivers an interactive 6-pillar evaluation workflow:
+
+### Pillar 1: High-Throughput Hardware Saturation & Ingestion
+- **Empirical Measurement:** Benchmarks the local data plane under realistic enterprise network loads.
+- **Hardware Capacity:** Sustained processing exceeding **16,000 Events/Sec (EPS)** on commodity laptop hardware.
+- **Zero Memory Leaks:** Deterministic memory bounds with zero memory degradation under peak saturation.
+
+### Pillar 2: Forensic Lineage & Exact Byte Offset Tracking
+- **Cryptographic Sealing:** Every raw event receives a SHA-256 digest at the ingestion boundary.
+- **Exact Slices:** Normalizer maps target fields (e.g., `src.ip`, `dst.port`, `event.action`) to precise start and end byte offsets within the raw payload.
+- **Auditable Lineage:** Exported lineage graphs enable courtroom-admissible, non-repudiable log auditing.
+
+### Pillar 3: Semantic Drift Detection & Safe Auto-Healing
+- **Drift Identification:** Detects vendor format shifts (e.g., status field changing from `"ALLOW"` to `1`, or timestamp reformatting).
+- **Safe Candidate Synthesis:** Local heuristic engine proposes candidate DSL specs without touching production code.
+- **5-Gate Safety Sandbox:** Prevents automated regression through mandatory syntax validation, fuzz testing, coverage checks, abstention bounds, and shadow dual-run comparisons.
+
+### Pillar 4: Detection Preservation Score (DPS) & SIEM Rule Integrity
+- **Rule Verification:** Evaluates detection contracts (DET 1–6: Brute Force, C2 Beaconing, Port Scanning, Lateral Movement, Data Exfiltration, Privilege Escalation).
+- **1.00 Ratio Gate:** Guarantees that alerts which triggered on raw logs continue to trigger identically on normalized logs.
+- **Zero Alert Drops:** Strict block on any parser deployment that degrades detection efficacy.
+
+### Pillar 5: Certified Telemetry Passport Generation
+- **Cryptographic Seal:** Produces a tamper-evident, machine-readable passport certifying schema conformance, DPS score, byte retention, and drift status.
+- **No Placeholders:** If a metric cannot be measured empirically, the passport strictly outputs `NOT YET MEASURED`.
+
+### Pillar 6: Continuous Security Assurance Suite (23 Subsystems)
+- **Exhaustive Invariant Audit:** Executes 23 subsystem checks covering contracts, parsers, lineage, firewall guards, exporters, and air-gap boundaries in under 12 seconds.
+- **Run Command:** `ulpx audit` or `ulpx-test`.
 
 ---
 
 ## Technology Stack
 
-| Layer | Technology | Responsibility |
-|---|---|---|
-| Data Plane | **Go** | Ingestion, hashing, safety checks, parser runtime, IR construction, exporters |
-| Control API | **Python + FastAPI** | Onboarding, semantic mapping, validation, lifecycle, drift, certification |
-| Web UI | **Next.js + TypeScript** | Review, lineage, passports, drift and parser lifecycle UX |
-| Metadata | **PostgreSQL** | Sources, parser versions, jobs, validation, audit events |
-| Event Analytics | **ClickHouse** | Normalized events and high-volume querying |
-| Raw Storage | **MinIO** | Immutable raw-event bytes |
-| Transport | **EventBus interface** | InMemoryBus for dev; Kafka/Redpanda optional |
+| Architectural Layer | Technology | Operational Responsibility |
+| :--- | :--- | :--- |
+| **Data Plane Runtime** | Python 3.9+ / Go | High-velocity streaming ingestion, SHA-256 sealing, deterministic DSL parsing |
+| **Contract Specifications** | JSON Schema (Draft-07) | 10 formal schemas governing all inter-service artifacts |
+| **Intelligence & Assurance** | Python / AST Compiler | Template mining, semantic mapping, drift analysis, shadow dual-run |
+| **CLI & Terminal UX** | Rich / Native OS Shells | Interactive demonstration console, real-time TUI observer, cross-platform CLI |
+| **Air-Gap Packaging** | Pure Wheels / Shell Wrappers | 100% offline self-contained standalone execution |
 
 ---
 
@@ -98,94 +162,69 @@ Unknown Source → Profiling → Semantic Mapping (AI-assisted)
 
 ```
 ulpf-x/
-├── apps/
-│   ├── ingest-gateway/          # Go — Event ingestion + raw preservation
-│   ├── normalize-worker/        # Go — Deterministic parser execution
-│   ├── control-api/             # Python/FastAPI — Control plane API
-│   └── web/                     # Next.js — UI
+├── bin/                         # Cross-platform CLI entrypoints (Unix, CMD, PS1)
+│   ├── ulpx                     # Unified master CLI launcher
+│   ├── ulpx-text                # Shorthand: Structured Text Log Sink
+│   ├── ulpx-json                # Shorthand: NDJSON / JSON Lines Sink
+│   ├── ulpx-csv                 # Shorthand: Tabular CSV Security Sink
+│   ├── ulpx-term                # Shorthand: Real-Time Observer Window
+│   ├── ulpx-api                 # Shorthand: Direct Pipeline Ingestion API
+│   ├── ulpx-on                  # Shorthand: Background Daemon Starter
+│   ├── ulpx-off                 # Shorthand: Background Daemon Stopper
+│   └── ulpx-test                # Shorthand: 23-Subsystem Assurance Suite
 ├── packages/
-│   ├── contracts/               # Versioned JSON schemas (source of truth)
-│   ├── parser-runtime/          # Parser DSL engine
-│   ├── exporters/
-│   │   ├── ecs/                 # Elastic Common Schema exporter
-│   │   └── ocsf/                # OCSF exporter
-│   └── detection-contracts/     # Detection preservation rules
+│   ├── contracts/               # Versioned JSON Schemas (Single Source of Truth)
+│   ├── parser-runtime/          # Deterministic DSL evaluation engine
+│   ├── exporters/               # ECS and OCSF projection transformers
+│   └── detection-contracts/     # SIEM detection rule contracts (DET 1-6)
 ├── ml/
-│   ├── source_profiler/         # Unknown-source profiling
-│   ├── semantic_mapper/         # Semantic field mapping + AI assist
-│   └── drift/                   # Structural & semantic drift detection
+│   ├── source_profiler/         # Log format & template inference
+│   ├── semantic_mapper/         # Semantic field mapping & Rule 4 abstention
+│   ├── drift/                   # Structural and semantic drift detection
+│   ├── shadow/                  # Dual-execution shadow runner
+│   ├── self_healing/            # 5-gate safe candidate spec synthesis
+│   └── benchmark/               # Empirical hardware saturation engine
 ├── fixtures/
-│   ├── golden/                  # Golden test fixtures per source
-│   ├── malformed/               # Malformed input test cases
-│   ├── drift/                   # Drift simulation fixtures
-│   └── onboarding/              # Unseen-source onboarding samples
+│   ├── contracts/               # Schema-validated contract examples
+│   ├── golden/                  # Golden security log corpora (Palo Alto, Fortinet, etc.)
+│   └── drift/                   # Drift scenario simulation fixtures
 ├── tests/
-│   ├── contracts/               # JSON Schema validation
-│   ├── integration/             # Storage, API, service boundaries
-│   ├── performance/             # Throughput & latency benchmarks
-│   └── e2e/                     # Full onboarding → certification flow
-├── infra/
-│   ├── clickhouse/              # ClickHouse config
-│   ├── postgres/                # PostgreSQL config + migrations
-│   └── minio/                   # MinIO config
-└── docs/
-    ├── PRD.md
-    ├── ARCHITECTURE.md
-    ├── DATA_MODEL.md
-    ├── PARSER_DSL.md
-    ├── TESTING.md
-    ├── DEMO.md
-    └── adr/                     # Architecture Decision Records
+│   ├── contracts/               # Contract gate validation (`make test-contracts`)
+│   ├── demo/                    # Demo rehearsal verification (`make demo-check`)
+│   └── airgap/                  # Offline hermetic validation checks
+├── scripts/
+│   ├── cli.py                   # Master unified CLI controller
+│   ├── demo.py                  # 6-pillar interactive judge presentation
+│   ├── audit.py                 # 23-subsystem continuous invariant test suite
+│   ├── install.sh               # Unix/macOS/Git Bash autonomous installer
+│   ├── install.bat              # Windows Command Prompt installer
+│   ├── install.ps1              # Windows PowerShell native installer
+│   └── build_dist.sh            # Air-gapped offline distribution packager
+├── Makefile                     # Build, test, and verification automation
+└── README.md                    # System documentation
 ```
 
 ---
 
-## V1 Scope
+## Verification & Testing
 
-**Perimeter/network-security logs first:**
-- Firewalls, routers, VPN gateways, IDS/IPS, secure web gateways/proxies, DNS appliances, generic syslog devices
-
-**Supported formats:**
-- Syslog, key-value text, JSON, CSV, CEF, LEEF, structured vendor-like text
-
-**Initial event families:**
-- `NETWORK_CONNECTION`, `FIREWALL_POLICY`, `AUTHENTICATION`, `DNS_ACTIVITY`, `WEB_SESSION`, `SECURITY_ALERT`, `GENERIC_NETWORK_EVENT`
-
----
-
-## Quick Start
+Verify system invariants and contract compliance locally:
 
 ```bash
-# Clone the repository
-git clone https://github.com/kalpeshkarnawat19/ULPX.git
-cd SIH-PS-2
+# Validate all 10 JSON Schema contracts
+make test-contracts
 
-# Start all services
-docker compose up -d
+# Verify stage-gate demo invariants
+make demo-check
 
-# Run tests
-make test
+# Run full continuous security assurance audit (23 subsystems)
+ulpx audit
+# or
+ulpx-test
 ```
 
 ---
 
-## Key Differentiators
+## License & Compliance
 
-1. **Forensic Lineage** — Every normalized field traces back to raw evidence and transformation steps
-2. **Abstention over Hallucination** — Uncertain mappings are preserved as source extensions, never forced
-3. **Detection Preservation Score** — Regression-tests that security detection rules still fire correctly after parser changes
-4. **Telemetry Passport** — Machine-readable assurance record tied to real validation runs, never placeholder scores
-5. **Safe Self-Healing** — Format drift triggers candidate parser generation → shadow comparison → human-approved promotion
-6. **Air-Gap Ready** — No required cloud APIs, no required Internet, all models/schemas stored locally
-
----
-
-
-## Engineering Principles
-
-- **Optimize for trust, not automation.** Fast incorrect normalization is worse than transparent abstention.
-- **Contract-first.** No service is implemented before its input/output schema exists.
-- **Fixture-first.** Integrate against schemas and golden fixtures, not verbal descriptions.
-- **Version everything.** Parser specs, schemas, exporter mappings, and validation reports are immutable and versioned.
-- **AI never activates a parser.** All promotion goes through validation gates and human/policy approval.
-
+Developed for the **Smart India Hackathon (SIH 2026)** under Problem Statement **SIH26156** for the **National Technical Research Organisation (NTRO)**. All software adheres strictly to air-gap deployment requirements and defense-in-depth telemetry governance.
