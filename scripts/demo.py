@@ -270,6 +270,44 @@ def demo_benchmarks() -> None:
     console.print(f"\n[bold green]✓ Proof:[/bold green] Measured live on actual host hardware (peak: {peak_eps:,.2f} EPS, {peak_mult:.1f}x requirement), exceeding the 5,000 EPS target without cloud dependencies.")
 
 
+def demo_command_suite() -> None:
+    from scripts.cli import handle_export, handle_watch, handle_api, handle_daemon
+    while True:
+        console.print()
+        cmd_menu = """
+Select a Command or Telemetry Sink:
+  [1] ulpx-json : Structured NDJSON / JSON Lines Sink & Inspector
+  [2] ulpx-csv  : Tabular CSV Security Sink & Inspector
+  [3] ulpx-text : Structured Text Log Sink & Inspector
+  [4] ulpx-term : Real-Time Telemetry Observer Window
+  [5] ulpx-api  : Direct Pipeline HTTP Ingestion Server
+  [6] ulpx-on   : Daemon Management (start / stop / status)
+  [B] Return to Main Demonstration Menu
+"""
+        console.print(Panel(cmd_menu.strip(), title="[bold cyan]Global Command Suite & Telemetry Sinks[/bold cyan]", border_style="bright_blue", box=box.ROUNDED))
+        try:
+            ch = console.input("[bold yellow]Select command [1-6, B]: [/bold yellow]").strip().upper()
+        except (EOFError, KeyboardInterrupt):
+            break
+
+        if ch == "1":
+            handle_export(["--format", "ndjson"])
+        elif ch == "2":
+            handle_export(["--format", "csv"])
+        elif ch == "3":
+            handle_export(["--format", "text"])
+        elif ch == "4":
+            handle_watch([])
+        elif ch == "5":
+            handle_api([])
+        elif ch == "6":
+            handle_daemon(["status"])
+        elif ch in ("B", "Q", ""):
+            break
+        else:
+            console.print("[red]Invalid selection, please try again.[/red]")
+
+
 def interactive_menu() -> None:
     render_banner()
     menu = """
@@ -280,12 +318,16 @@ Select a Demonstration Scenario:
   [4] Telemetry Passport: Empirical Detection Contracts & DPS Certification
   [5] Safe Self-Healing: Semantic Drift, Shadow Isolation & 5 Refusal Gates
   [6] Empirical Saturation Benchmark: Real Reference Hardware & Dynamic Measurement
+  [7] Command Suite Sinks & Observers (ulpx-json, ulpx-csv, ulpx-term, ulpx-api, etc.)
   [A] Run All Scenarios (Full 2-Minute Guided Rehearsal)
   [Q] Exit
 """
     while True:
         console.print(Panel(menu, title="Interactive Scenarios", border_style="cyan", box=box.ROUNDED))
-        choice = console.input("[bold yellow]Select option [1-6, A, Q]: [/bold yellow]").strip().upper()
+        try:
+            choice = console.input("[bold yellow]Select option [1-7, A, Q]: [/bold yellow]").strip().upper()
+        except (EOFError, KeyboardInterrupt):
+            break
 
         if choice == "1":
             demo_firewall()
@@ -299,6 +341,8 @@ Select a Demonstration Scenario:
             demo_self_healing()
         elif choice == "6":
             demo_benchmarks()
+        elif choice == "7":
+            demo_command_suite()
         elif choice == "A":
             demo_firewall()
             time.sleep(1)
