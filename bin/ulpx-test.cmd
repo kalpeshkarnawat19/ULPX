@@ -9,6 +9,13 @@ if %errorlevel% equ 0 (
     exit /b %errorlevel%
 )
 
+:: Check official Windows Python launcher (py.exe)
+py -3 -c "import sys" >nul 2>&1
+if %errorlevel% equ 0 (
+    py -3 "%ENGINE_ROOT%\scripts\audit.py" %*
+    exit /b %errorlevel%
+)
+
 :: Fallback to python3 if available
 python3 -c "import sys" >nul 2>&1
 if %errorlevel% equ 0 (

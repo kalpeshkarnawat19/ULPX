@@ -91,6 +91,22 @@ if [ "$(uname)" = "Darwin" ]; then
     register_shell_config "$HOME/.zprofile" "zsh-profile"
 fi
 
+# If running on Windows (Git Bash / MSYS2 / MINGW), also register in Windows User PATH for CMD & PowerShell
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*)
+        if command -v powershell.exe >/dev/null 2>&1; then
+            powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '
+                $binPath = "$env:USERPROFILE\.ulpx\bin";
+                $userPath = [Environment]::GetEnvironmentVariable("Path", "User");
+                if ($userPath -notlike "*$binPath*") {
+                    [Environment]::SetEnvironmentVariable("Path", ($userPath.TrimEnd(";") + ";" + $binPath), "User");
+                    Write-Host "  ✔ Registered .ulpx\bin in Windows User PATH for CMD and PowerShell" -ForegroundColor Green;
+                }
+            ' 2>/dev/null || true
+        fi
+        ;;
+esac
+
 # --- Step 5: Python Dependency Verification ---
 echo "[5/6] Verifying Python dependencies..."
 PY_BIN=""
