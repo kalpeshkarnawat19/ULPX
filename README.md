@@ -93,7 +93,7 @@ When monitoring live rolling telemetry, the observer window provides non-blockin
 
 ### Option 1: Standalone Package (Linux / macOS / Windows)
 
-Download `ULPF-X-Standalone-v1.0.0.zip` from [GitHub Releases](https://github.com/kalpeshkarnawat19/ULPX/releases/tag/v1.0.0-rc1).
+Download `ULPF-X-Standalone-v1.0.0.zip` from [GitHub Releases](https://github.com/kalpeshkarnawat19/ULPF-X/releases/tag/v1.0.0-rc1).
 
 #### Linux & macOS
 ```bash
@@ -115,8 +115,8 @@ ulpx
 
 ```bash
 # Clone the repository
-git clone https://github.com/kalpeshkarnawat19/ULPX.git
-cd ULPX
+git clone https://github.com/kalpeshkarnawat19/ULPF-X.git
+cd ULPF-X
 
 # Add bin directory to PATH for the current session
 source scripts/env.sh
