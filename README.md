@@ -37,6 +37,7 @@ ULPF-X enforces strict architectural non-negotiables:
 - **Rule 4 Abstention:** Ambiguous mappings strictly abstain when confidence is below 0.80. Unknown fields are retained in `extensions`—nothing is discarded.
 - **Detection Preservation Score (DPS):** Automated regression gates verify that downstream SIEM detection rules continue to fire at a 1.00 ratio across all schema transformations.
 - **Certified Telemetry Passports:** Telemetry quality is authenticated exclusively via completed empirical validation runs. Zero placeholder metrics.
+- **In-Memory Bounded Circular Buffer:** Bounded thread-safe `EventRingBuffer` (5,000-event sliding window) maintaining O(1) RAM (~20MB cap) and 10MB FIFO log rotation, completely eliminating disk bloat and file lock contention during continuous high-velocity ingestion.
 - **Hermetic Air-Gap Execution:** Operates completely offline with local model weights, schemas, and wheel dependencies. Zero external cloud or DNS dependencies.
 
 ---
@@ -74,6 +75,18 @@ ulpx export    ulpx export   ulpx export   ulpx watch    ulpx api      ulpx daem
 | `ulpx audit` *(or `ulpx test`)* | `ulpx-test` | Console Report | 23-Subsystem Continuous Security Assurance Suite |
 | `ulpx` *(zero arguments)* | `ulpx` | Interactive Console | 6-Pillar Guided Judge Demonstration Console |
 
+### Interactive Observer Hotkeys (`ulpx-term` / `ulpx watch`)
+
+When monitoring live rolling telemetry, the observer window provides non-blocking, single-keystroke controls:
+
+| Keystroke | Action | Forensic Behavior |
+| :--- | :--- | :--- |
+| **`[SPACE]`** | **Freeze / Resume Stream** | Freezes the visual display for forensic inspection while background ingestion continues uninterrupted. |
+| **`[S]`** | **Instant Forensic Snapshot** | Dumps the active sliding window (up to 5,000 events) into `~/.ulpx/snapshots/snapshot_<timestamp>.jsonl`. |
+| **`[O]`** | **Toggle Daemon (`ulpx-on` / `ulpx-off`)** | Starts or stops the background daemon service directly from the observer screen (no second terminal needed). |
+| **`[C]`** | **Clear Buffer** | Flushes display history and resets the monitor table. |
+| **`[Q]`** | **Clean Detach** | Restores terminal cursor/settings and returns to shell prompt; background daemon remains active. |
+
 ---
 
 ## Quick Start & Installation
@@ -87,6 +100,11 @@ Download `ULPF-X-Standalone-v1.0.0.zip` from [GitHub Releases](https://github.co
 unzip ULPF-X-Standalone-v1.0.0.zip
 cd ULPF-X-Standalone-v1.0.0
 bash install.sh
+source ~/.bashrc   # or source ~/.zshrc to activate in current terminal session
+
+# Verify system & launch console
+ulpx-test
+ulpx
 ```
 
 #### Windows (Git Bash / PowerShell / Command Prompt)
@@ -97,8 +115,8 @@ bash install.sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/kalpeshkarnawat19/SIH-PS-2.git
-cd SIH-PS-2
+git clone https://github.com/kalpeshkarnawat19/ULPX.git
+cd ULPX
 
 # Add bin directory to PATH for the current session
 source scripts/env.sh
